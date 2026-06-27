@@ -1,32 +1,30 @@
-import { BaseService } from '@/lib/services/base.service';
+import { AuditService } from '@/infrastructure/logger/audit/audit.service';
+import { AuditRepository } from '@/infrastructure/logger/audit/audit.repository';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { KelasRepository } from '../repositories/kelas.repository';
 import { CreateKelasInput, UpdateKelasInput } from '../validators/kelas.validator';
-import { generateId } from '@/lib/utils';
+import { generateId } from '@/shared/utils';
+import { ConflictError, NotFoundError } from '@/lib/errors';
+import { masterSantri } from '../../schemas/master.schema';
+import { eq, or, and, isNull } from 'drizzle-orm';
 
-export class KelasService extends BaseService {
-  private repository: KelasRepository;
-
-  constructor() {
-    super();
-    this.repository = new KelasRepository();
-  }
+export class KelasService {
+  constructor(private readonly uow: UnitOfWork) {}
+  private get repository() { return this.uow.repos.kelas; }
 
   async getAllKelass(pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.kelas.view');
     return this.repository.findAll(pondokId);
   }
 
   async getKelasById(id: string, pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.kelas.view');
     return this.repository.findById(id, pondokId);
   }
 
   async createKelas(data: CreateKelasInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.kelas.create');
 
     const existingKelas = await this.repository.findByNameAndSchool(data.name, data.schoolId, data.pondokId);
     if (existingKelas) {
-      throw new Error(`Kelas dengan nama '${data.name}' sudah ada di sekolah ini.`);
+      throw new ConflictError(`Kelas dengan nama '${data.name}' sudah ada di sekolah ini.`);
     }
 
     const id = generateId('kelas');
@@ -36,9 +34,9 @@ export class KelasService extends BaseService {
       createdBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_KELAS',
-      entity: 'master_class',
+      entityName: 'master_class',
       entityId: id,
       action: 'CREATE',
       afterData: newKelas,
@@ -49,17 +47,16 @@ export class KelasService extends BaseService {
   }
 
   async updateKelas(id: string, data: UpdateKelasInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.kelas.update');
 
     const existingKelas = await this.repository.findById(id, data.pondokId);
     if (!existingKelas) {
-      throw new Error('Kelas tidak ditemukan.');
+      throw new NotFoundError('Kelas tidak ditemukan.');
     }
 
     if (existingKelas.name !== data.name || existingKelas.schoolId !== data.schoolId) {
       const nameCheck = await this.repository.findByNameAndSchool(data.name, data.schoolId, data.pondokId);
       if (nameCheck) {
-        throw new Error(`Kelas dengan nama '${data.name}' sudah ada di sekolah ini.`);
+        throw new ConflictError(`Kelas dengan nama '${data.name}' sudah ada di sekolah ini.`);
       }
     }
 
@@ -68,9 +65,9 @@ export class KelasService extends BaseService {
       updatedBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_KELAS',
-      entity: 'master_class',
+      entityName: 'master_class',
       entityId: id,
       action: 'UPDATE',
       beforeData: existingKelas,
@@ -82,21 +79,36 @@ export class KelasService extends BaseService {
   }
 
   async deleteKelas(id: string, pondokId: string, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.kelas.delete');
 
     const existingKelas = await this.repository.findById(id, pondokId);
     if (!existingKelas) {
-      throw new Error('Kelas tidak ditemukan.');
+      throw new NotFoundError('Kelas tidak ditemukan.');
     }
 
-    // TODO: Cek apakah kelas sedang digunakan oleh santri
-    // Jika digunakan, lempar Error
+    const santriExists = await this.uow.repos.client
+      .select({ id: masterSantri.id })
+      .from(masterSantri)
+      .where(and(or(eq(masterSantri.classFormalId, id), eq(masterSantri.classDiniyahId, id)), isNull(masterSantri.deletedAt)))
+      .limit(1);
+
+    if (santriExists.length > 0) {
+      await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
+        module: 'MASTER_KELAS',
+        entityName: 'master_class',
+        entityId: id,
+        action: 'DELETE_FAILED',
+        beforeData: existingKelas,
+        afterData: { reason: 'Data masih digunakan oleh entitas Santri' },
+        performedBy: userId,
+      });
+      throw new ConflictError('Kelas tidak dapat dihapus karena masih digunakan oleh data Santri.');
+    }
 
     const deletedKelas = await this.repository.softDelete(id, pondokId, userId);
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_KELAS',
-      entity: 'master_class',
+      entityName: 'master_class',
       entityId: id,
       action: 'DELETE',
       beforeData: existingKelas,

@@ -27,7 +27,7 @@ export function TahunAjaranForm({ initialData, onSubmit, isSubmitting }: TahunAj
   const isEditing = !!initialData;
   const schema = isEditing ? updateTahunAjaranSchema : createTahunAjaranSchema;
   
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<UpdateTahunAjaranInput>({
     resolver: zodResolver(schema as any),
     defaultValues: {

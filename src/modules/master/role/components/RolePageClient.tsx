@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PageHeader, StatisticsCard, FormDialog, ConfirmDelete, ImportExportTools, StatusBadge } from '@/components/master';
 import { Shield, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { RoleTable } from './RoleTable';
@@ -18,11 +18,7 @@ export function RolePageClient() {
   const [selectedRole, setSelectedRole] = useState<RoleEntity | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchRoles();
-  }, []);
-
-  const fetchRoles = async () => {
+  const fetchRoles = useCallback(async () => {
     setLoading(true);
     const res = await getRoles();
     if (res.success) {
@@ -31,7 +27,14 @@ export function RolePageClient() {
       showToast({ title: 'Gagal memuat data', message: res.error as string, type: 'error' });
     }
     setLoading(false);
-  };
+   
+  }, []);
+
+  useEffect(() => {
+    fetchRoles();
+  }, [fetchRoles]);
+
+
 
   const handleFormSubmit = async (formData: FormData) => {
     const isEdit = !!selectedRole;

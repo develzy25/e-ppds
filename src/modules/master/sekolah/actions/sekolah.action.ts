@@ -1,17 +1,23 @@
 'use server';
 
+import { getCurrentUser as getRealUser } from '@/lib/services/auth';
 import { revalidatePath } from 'next/cache';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { SekolahService } from '../services/sekolah.service';
 import { createSekolahSchema, updateSekolahSchema } from '../validators/sekolah.validator';
+import { errorResponse, successResponse } from '@/shared/utils/action-error';
 
-const sekolahService = new SekolahService();
+const sekolahService = new SekolahService(new UnitOfWork());
 
-// Mock function to get current user context
 async function getCurrentUser() {
+  const user = await getRealUser();
+  if (!user) {
+    throw new Error('Unauthorized: Sesi tidak ditemukan atau kedaluwarsa');
+  }
   return {
-    id: 'u1',
-    pondokId: 'pondok-1',
-    permissions: ['master.sekolah.view', 'master.sekolah.create', 'master.sekolah.update', 'master.sekolah.delete'],
+    id: user.userId,
+    pondokId: user.pondokId,
+    permissions: user.permissions,
   };
 }
 
@@ -19,9 +25,9 @@ export async function getSekolahs() {
   try {
     const user = await getCurrentUser();
     const sekolahs = await sekolahService.getAllSekolahs(user.pondokId, user.permissions);
-    return { success: true, data: sekolahs };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(sekolahs);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -29,9 +35,9 @@ export async function getSekolah(id: string) {
   try {
     const user = await getCurrentUser();
     const sekolah = await sekolahService.getSekolahById(id, user.pondokId, user.permissions);
-    return { success: true, data: sekolah };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(sekolah);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -49,9 +55,9 @@ export async function createSekolah(formData: FormData) {
     const newSekolah = await sekolahService.createSekolah(validatedData, user.id, user.permissions);
     
     revalidatePath('/master/sekolah');
-    return { success: true, data: newSekolah };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(newSekolah);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -71,9 +77,9 @@ export async function updateSekolah(formData: FormData) {
     const updatedSekolah = await sekolahService.updateSekolah(id, validatedData, user.id, user.permissions);
     
     revalidatePath('/master/sekolah');
-    return { success: true, data: updatedSekolah };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(updatedSekolah);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -83,8 +89,8 @@ export async function deleteSekolah(id: string) {
     const deletedSekolah = await sekolahService.deleteSekolah(id, user.pondokId, user.id, user.permissions);
     
     revalidatePath('/master/sekolah');
-    return { success: true, data: deletedSekolah };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(deletedSekolah);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }

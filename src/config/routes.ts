@@ -31,6 +31,12 @@ export const routes: RouteItem[] = [
       { id: 'master-santri', label: 'Data Santri', path: '/master/santri', permissions: ['master.santri.view'] },
       { id: 'master-pengurus', label: 'Data Pengurus', path: '/master/pengurus', permissions: ['master.pengurus.view'] },
       { id: 'master-role', label: 'Role & Permission', path: '/master/role', permissions: ['master.role.view'] },
+      { id: 'master-permission', label: 'Daftar Izin', path: '/master/permission', permissions: ['master.permission.view'] },
+      { id: 'master-department', label: 'Departemen', path: '/master/department', permissions: ['master.department.view'] },
+      { id: 'master-jabatan', label: 'Jabatan', path: '/master/jabatan', permissions: ['master.jabatan.view'] },
+      { id: 'master-sekolah', label: 'Sekolah', path: '/master/sekolah', permissions: ['master.sekolah.view'] },
+      { id: 'master-kelas', label: 'Kelas', path: '/master/kelas', permissions: ['master.kelas.view'] },
+      { id: 'master-periode', label: 'Periode', path: '/master/periode', permissions: ['master.periode.view'] },
       { id: 'master-room', label: 'Data Kamar & Blok', path: '/master/room', permissions: ['master.room.view'] },
       { id: 'master-academic', label: 'Tahun Ajaran', path: '/master/academic', permissions: ['master.academic_year.view'] }
     ]
@@ -232,5 +238,72 @@ export const routes: RouteItem[] = [
       { id: 'keamanan-pelanggaran', label: 'Pelanggaran & Takzir', path: '/keamanan/pelanggaran', permissions: ['keamanan.pelanggaran.view'] },
       { id: 'keamanan-bullying', label: 'Log Bullying', path: '/keamanan/bullying', permissions: ['keamanan.bullying.view'] }
     ]
+  },
+  {
+    id: 'pendidikan',
+    label: 'Seksi Pendidikan',
+    path: '/pendidikan',
+    icon: 'BookOpen',
+    permissions: ['pendidikan.dashboard.view'],
+    children: [
+      { id: 'pendidikan-jamiyyah', label: 'Jamiyyah', path: '/jamiyyah', permissions: ['pendidikan.jamiyyah.view'] },
+      { id: 'pendidikan-wajar', label: 'Wajar Murottil', path: '/wajar-murottil', permissions: ['pendidikan.wajar.view'] }
+    ]
+  },
+  {
+    id: 'kesehatan',
+    label: 'Seksi Kesehatan',
+    path: '/kesehatan',
+    icon: 'HeartPulse',
+    permissions: ['kesehatan.dashboard.view']
+  },
+  {
+    id: 'humasy',
+    label: 'Hubungan Masyarakat',
+    path: '/humasy',
+    icon: 'Users',
+    permissions: ['humasy.dashboard.view']
+  },
+  {
+    id: 'dms',
+    label: 'Document Management',
+    path: '/dms',
+    icon: 'Folders',
+    permissions: ['dms.dashboard.view']
+  },
+  {
+    id: 'media',
+    label: 'Seksi Media',
+    path: '/media',
+    icon: 'Megaphone',
+    permissions: ['media.dashboard.view']
+  },
+  {
+    id: 'musyawarah',
+    label: 'Musyawarah Pondok',
+    path: '/musyawarah',
+    icon: 'MessagesSquare',
+    permissions: ['musyawarah.dashboard.view']
+  },
+  {
+    id: 'pembangunan',
+    label: 'Seksi Pembangunan',
+    path: '/pembangunan',
+    icon: 'HardHat',
+    permissions: ['pembangunan.dashboard.view']
+  },
+  {
+    id: 'takmir',
+    label: 'Seksi Takmir',
+    path: '/takmir',
+    icon: 'Moon',
+    permissions: ['takmir.dashboard.view']
+  },
+  {
+    id: 'plp',
+    label: 'PLP',
+    path: '/plp',
+    icon: 'FlaskConical',
+    permissions: ['plp.dashboard.view']
   }
 ];

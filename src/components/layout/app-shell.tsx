@@ -6,19 +6,24 @@ import { AppHeader } from './app-header';
 import { AppContent } from './app-content';
 import { BackgroundScene } from '@/components/ui/background-scene';
 import { useApp } from '@/context/AppContext';
+import { usePathname } from 'next/navigation';
+import { CommandPalette } from './command-palette';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { isSidebarOpen } = useApp();
+  const pathname = usePathname();
+  const { isSidebarOpen, isLoadingUser } = useApp();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1200);
-    return () => clearTimeout(timer);
+    // Remove the artificial delay, let it render as soon as user is loaded
+    setIsLoading(false);
   }, []);
 
-  if (isLoading) {
+  if (pathname === '/login') {
+    return <>{children}</>;
+  }
+
+  if (isLoading || isLoadingUser) {
     return (
       <div className="relative flex h-screen w-screen flex-col items-center justify-center bg-background overflow-hidden text-foreground">
         {/* Ambient Gradient Background */}
@@ -56,17 +61,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground relative">
       {/* Background Layer */}
       <BackgroundScene />
       
       {/* Sidebar (Fixed position) */}
       <AppSidebar />
       
-      {/* Konten area di sebelah kanan sidebar */}
+      {/* Command Palette (Global Ctrl+K Search) */}
+      <CommandPalette />
+      
+      {/* Mobile Drawer Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => {
+            // Triggered from anywhere in AppContext
+            const contextEvent = new CustomEvent('close-sidebar-mobile');
+            window.dispatchEvent(contextEvent);
+          }}
+        />
+      )}
+      
+      {/* Konten area di sebelah kanan sidebar pada desktop */}
       <div 
         className={`flex flex-col flex-1 h-full overflow-hidden transition-all duration-300 ${
-          isSidebarOpen ? 'md:pl-64' : 'md:pl-16'
+          isSidebarOpen ? 'md:ml-64' : 'md:ml-16'
         }`}
       >
         {/* Header Global */}

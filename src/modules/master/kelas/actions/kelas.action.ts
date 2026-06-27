@@ -1,19 +1,25 @@
 'use server';
 
+import { getCurrentUser as getRealUser } from '@/lib/services/auth';
 import { revalidatePath } from 'next/cache';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { KelasService } from '../services/kelas.service';
 import { SekolahService } from '../../sekolah/services/sekolah.service';
 import { createKelasSchema, updateKelasSchema } from '../validators/kelas.validator';
+import { errorResponse, successResponse } from '@/shared/utils/action-error';
 
-const kelasService = new KelasService();
-const sekolahService = new SekolahService();
+const kelasService = new KelasService(new UnitOfWork());
+const sekolahService = new SekolahService(new UnitOfWork());
 
-// Mock function to get current user context
 async function getCurrentUser() {
+  const user = await getRealUser();
+  if (!user) {
+    throw new Error('Unauthorized: Sesi tidak ditemukan atau kedaluwarsa');
+  }
   return {
-    id: 'u1',
-    pondokId: 'pondok-1',
-    permissions: ['master.kelas.view', 'master.kelas.create', 'master.kelas.update', 'master.kelas.delete', 'master.sekolah.view'],
+    id: user.userId,
+    pondokId: user.pondokId,
+    permissions: user.permissions,
   };
 }
 
@@ -21,9 +27,9 @@ export async function getKelass() {
   try {
     const user = await getCurrentUser();
     const kelass = await kelasService.getAllKelass(user.pondokId, user.permissions);
-    return { success: true, data: kelass };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(kelass);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -31,9 +37,9 @@ export async function getSekolahsForDropdown() {
   try {
     const user = await getCurrentUser();
     const sekolahs = await sekolahService.getAllSekolahs(user.pondokId, user.permissions);
-    return { success: true, data: sekolahs };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(sekolahs);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -51,9 +57,9 @@ export async function createKelas(formData: FormData) {
     const newKelas = await kelasService.createKelas(validatedData, user.id, user.permissions);
     
     revalidatePath('/master/kelas');
-    return { success: true, data: newKelas };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(newKelas);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -73,9 +79,9 @@ export async function updateKelas(formData: FormData) {
     const updatedKelas = await kelasService.updateKelas(id, validatedData, user.id, user.permissions);
     
     revalidatePath('/master/kelas');
-    return { success: true, data: updatedKelas };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(updatedKelas);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -85,8 +91,8 @@ export async function deleteKelas(id: string) {
     const deletedKelas = await kelasService.deleteKelas(id, user.pondokId, user.id, user.permissions);
     
     revalidatePath('/master/kelas');
-    return { success: true, data: deletedKelas };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(deletedKelas);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }

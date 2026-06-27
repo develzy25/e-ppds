@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as Icons from 'lucide-react';
@@ -18,14 +18,46 @@ function DynamicIcon({ name, className }: { name: string; className?: string }) 
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { currentUser, isSidebarOpen } = useApp();
+  const { currentUser, isSidebarOpen, setSidebarOpen } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
-    kesekretariatan: true,
-  });
+  
+  // Persist expanded menus in localStorage
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const saved = localStorage.getItem('sidebar:expanded');
+    if (saved) {
+      try {
+        setExpandedMenus(JSON.parse(saved));
+      } catch (e) {
+        setExpandedMenus({ kesekretariatan: true });
+      }
+    } else {
+      setExpandedMenus({ kesekretariatan: true });
+    }
+
+    const handleMobileClose = () => {
+      if (window.innerWidth < 768) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('close-sidebar-mobile', handleMobileClose);
+    return () => window.removeEventListener('close-sidebar-mobile', handleMobileClose);
+  }, [setSidebarOpen]);
 
   const toggleExpand = (id: string) => {
-    setExpandedMenus(prev => ({ ...prev, [id]: !prev[id] }));
+    setExpandedMenus(prev => {
+      const next = { ...prev, [id]: !prev[id] };
+      localStorage.setItem('sidebar:expanded', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleNavClick = () => {
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
   };
 
   const hasAccess = (item: RouteItem): boolean => {
@@ -156,6 +188,7 @@ export function AppSidebar() {
                 ) : (
                   <Link
                     href={item.path}
+                    onClick={handleNavClick}
                     className={`
                       relative flex items-center gap-2.5 rounded-xl px-2.5 py-2
                       text-xs font-semibold transition-all duration-200 group
@@ -202,6 +235,7 @@ export function AppSidebar() {
                           ) : (
                             <Link
                               href={sub.path}
+                              onClick={handleNavClick}
                               className={`block rounded-lg px-2 py-1.5 text-[11px] font-medium transition-all ${
                                 pathname === sub.path
                                   ? 'text-primary bg-primary/8 font-semibold'
@@ -222,6 +256,7 @@ export function AppSidebar() {
                                 <Link
                                   key={leaf.id}
                                   href={leaf.path}
+                                  onClick={handleNavClick}
                                   className={`block rounded-lg px-2 py-1 text-[10px] font-medium transition-all ${
                                     pathname === leaf.path
                                       ? 'text-primary font-bold'

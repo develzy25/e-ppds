@@ -1,0 +1,73 @@
+{
+  // ─────────────────────────────────────────────────────────────
+  // PPDS ERP — Wrangler Configuration (Cloudflare Workers)
+  // ─────────────────────────────────────────────────────────────
+  // Konfigurasi deployment Next.js pada Cloudflare Workers.
+  // File ini menggunakan format JSONC agar mendukung komentar.
+  //
+  // ⚠️ Jangan commit file ini dengan secret key.
+  //    Gunakan `wrangler secret put <KEY>` untuk production.
+  // ─────────────────────────────────────────────────────────────
+
+  "name": "ppds-erp",
+  "compatibility_date": "2024-12-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Assets
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+
+  // D1 Database Bindings
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "e-ppds-db",
+      "database_id": "1995d927-986b-483f-b6d8-805e3c59508d"
+    }
+  ],
+
+  // Environment Variables (non-secret)
+  "vars": {
+    "NODE_ENV": "production",
+    "APP_VERSION": "1.0.0",
+    "PPDS_TENANT_MODE": "single"
+  },
+
+  // Worker Limits
+  "limits": {
+    "cpu_ms": 30000
+  },
+
+  // Observability & Logging
+  "observability": {
+    "enabled": true
+  },
+
+  // KV Namespace (for session/cache if needed later)
+  // "kv_namespaces": [
+  //   {
+  //     "binding": "KV_CACHE",
+  //     "id": "<KV_NAMESPACE_ID>"
+  //   }
+  // ],
+
+  // Staging environment overrides
+  "env": {
+    "staging": {
+      "name": "ppds-erp-staging",
+      "vars": {
+        "NODE_ENV": "staging",
+        "APP_VERSION": "1.0.0-staging"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "e-ppds-db-staging",
+          "database_id": "REPLACE_WITH_STAGING_DB_ID"
+        }
+      ]
+    }
+  }
+}

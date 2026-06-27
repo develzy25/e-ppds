@@ -1,17 +1,23 @@
 'use server';
 
+import { getCurrentUser as getRealUser } from '@/lib/services/auth';
 import { revalidatePath } from 'next/cache';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { BlokService } from '../services/blok.service';
 import { createBlokSchema, updateBlokSchema } from '../validators/blok.validator';
+import { errorResponse, successResponse } from '@/shared/utils/action-error';
 
-const blokService = new BlokService();
+const blokService = new BlokService(new UnitOfWork());
 
-// Mock function to get current user context
 async function getCurrentUser() {
+  const user = await getRealUser();
+  if (!user) {
+    throw new Error('Unauthorized: Sesi tidak ditemukan atau kedaluwarsa');
+  }
   return {
-    id: 'u1',
-    pondokId: 'pondok-1',
-    permissions: ['master.blok.view', 'master.blok.create', 'master.blok.update', 'master.blok.delete'],
+    id: user.userId,
+    pondokId: user.pondokId,
+    permissions: user.permissions,
   };
 }
 
@@ -19,9 +25,9 @@ export async function getBloks() {
   try {
     const user = await getCurrentUser();
     const bloks = await blokService.getAllBloks(user.pondokId, user.permissions);
-    return { success: true, data: bloks };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(bloks);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -29,9 +35,9 @@ export async function getBlok(id: string) {
   try {
     const user = await getCurrentUser();
     const blok = await blokService.getBlokById(id, user.pondokId, user.permissions);
-    return { success: true, data: blok };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(blok);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -48,9 +54,9 @@ export async function createBlok(formData: FormData) {
     const newBlok = await blokService.createBlok(validatedData, user.id, user.permissions);
     
     revalidatePath('/master/blok');
-    return { success: true, data: newBlok };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(newBlok);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -69,9 +75,9 @@ export async function updateBlok(formData: FormData) {
     const updatedBlok = await blokService.updateBlok(id, validatedData, user.id, user.permissions);
     
     revalidatePath('/master/blok');
-    return { success: true, data: updatedBlok };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(updatedBlok);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -81,8 +87,8 @@ export async function deleteBlok(id: string) {
     const deletedBlok = await blokService.deleteBlok(id, user.pondokId, user.id, user.permissions);
     
     revalidatePath('/master/blok');
-    return { success: true, data: deletedBlok };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(deletedBlok);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }

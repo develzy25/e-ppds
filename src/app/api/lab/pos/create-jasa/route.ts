@@ -1,24 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createJasaTransaction } from '@/lib/services/laboratorium';
+import { ok, badRequest, internalError } from '@/shared/utils/api-response';
+import { getRequestMeta } from '@/shared/utils/request-meta';
 
 export async function POST(req: NextRequest) {
+  const meta = await getRequestMeta();
   try {
     const { items, cashierName, periodId, pondokId } = await req.json();
 
     if (!items || !Array.isArray(items) || !cashierName || !periodId || !pondokId) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required parameters' },
-        { status: 400 }
-      );
+      return badRequest('LAB-400', 'Missing required parameters', meta);
     }
 
     const transactionId = await createJasaTransaction(items, cashierName, periodId, pondokId);
-    return NextResponse.json({ success: true, transactionId });
+    return ok({ transactionId }, meta);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json(
-      { success: false, error: errorMessage },
-      { status: 500 }
-    );
+    return internalError('LAB-500', errorMessage, meta);
   }
 }

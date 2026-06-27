@@ -7,8 +7,6 @@ import { Sparkles, Delete, HelpCircle, KeyRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { mockUsers } from '@/config/mock-data';
-import { signJwt } from '@/lib/utils/jwt';
-
 // Mapped PINs for simulation/demo
 const pinUsers = [
   { pin: '111111', userId: 'u1', name: 'K.H. Ahmad Dahlan', role: 'Ketua Umum' },
@@ -20,7 +18,7 @@ const pinUsers = [
 
 export default function LoginPage() {
   const router = useRouter();
-  const { changeUser, showToast } = useApp();
+  const { showToast } = useApp();
   const [pin, setPin] = useState('');
   const [isShaking, setIsShaking] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,59 +53,34 @@ export default function LoginPage() {
 
   const submitPin = useCallback(async (enteredPin: string) => {
     setIsSubmitting(true);
-    const matched = pinUsers.find(item => item.pin === enteredPin);
-    if (!matched) {
-      setIsShaking(true);
-      setTimeout(() => setIsShaking(false), 500);
-      setPin('');
-      showToast({
-        title: 'Akses Ditolak',
-        message: 'PIN 6-digit tidak valid atau belum terdaftar.',
-        type: 'error'
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    const user = mockUsers.find(u => u.id === matched.userId);
-    if (!user) {
-      showToast({
-        title: 'Error',
-        message: 'User profile tidak ditemukan.',
-        type: 'error'
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
-      const JWT_SECRET = 'ppds-erp-fallback-secret-key-123456';
-      const payload = {
-        userId: user.id,
-        pondokId: 'pon-1',
-        periodId: 'per-2026',
-        roles: [user.primaryRole, ...user.additionalRoles],
-        permissions: user.permissions,
-        sessionVersion: 1,
-        permissionVersion: 1,
-        exp: Date.now() + 24 * 60 * 60 * 1000,
-      };
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: enteredPin }),
+      });
+      const data = await res.json();
+      
+      if (!data.success) {
+        setIsShaking(true);
+        setTimeout(() => setIsShaking(false), 500);
+        setPin('');
+        showToast({
+          title: 'Akses Ditolak',
+          message: data.error?.message || 'PIN yang dimasukkan salah.',
+          type: 'error'
+        });
+        return;
+      }
 
-      const token = await signJwt(payload, JWT_SECRET);
-      
-      // Set HttpOnly-like Client Cookie
-      document.cookie = `session_token=${token}; path=/; max-age=86400; SameSite=Strict`;
-      
-      // Sync to Context
-      changeUser(user.id);
-      
       showToast({
         title: 'Selamat Datang',
-        message: `Login sukses sebagai ${user.name}`,
+        message: 'Login sukses',
         type: 'success'
       });
 
-      router.push('/dashboard/personal');
+      // Clear cookie and set new session, reload layout to fetch context
+      window.location.href = '/dashboard/personal';
     } catch (err) {
       console.error(err);
       showToast({
@@ -119,7 +92,7 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [changeUser, router, showToast]);
+  }, [showToast]);
 
   const handleKeypadPress = useCallback((digit: string) => {
     if (isSubmitting) return;

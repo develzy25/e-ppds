@@ -1,10 +1,12 @@
 import { db } from '@/db';
+import { DbClient } from '@/infrastructure/database/repositories/base.repository';
 import { masterAcademicYear } from '../../schemas/master.schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { CreateTahunAjaranInput, UpdateTahunAjaranInput } from '../validators/tahun-ajaran.validator';
 import { TahunAjaranEntity } from '../types/tahun-ajaran.type';
 
 export class TahunAjaranRepository {
+  constructor(protected readonly database: DbClient = db) {}
   async findAll(pondokId: string): Promise<TahunAjaranEntity[]> {
     return db
       .select()

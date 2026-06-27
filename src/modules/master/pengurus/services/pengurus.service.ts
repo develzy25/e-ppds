@@ -1,14 +1,33 @@
-import { BaseService } from '@/lib/services/base.service';
+import { AuditService } from '@/infrastructure/logger/audit/audit.service';
+import { AuditRepository } from '@/infrastructure/logger/audit/audit.repository';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { PengurusRepository } from '../repositories/pengurus.repository';
+import { RoleRepository } from '../../role/repositories/role.repository';
+import { JabatanRepository } from '../../jabatan/repositories/jabatan.repository';
+import { PeriodeRepository } from '../../periode/repositories/periode.repository';
 import { CreatePengurusInput, UpdatePengurusInput } from '../validators/pengurus.validator';
-import { generateId } from '@/lib/utils';
+import { generateId } from '@/shared/utils';
+import { eq, sql } from 'drizzle-orm';
+import { masterPeriod } from '../../schemas/master.schema';
 
-export class PengurusService extends BaseService {
-  private repository: PengurusRepository;
+export class PengurusService {
+  constructor(private readonly uow: UnitOfWork) {}
+  private get repository() { return this.uow.repos.pengurus; }
+  private get roleRepo() { return this.uow.repos.role; }
+  private get jabatanRepo() { return this.uow.repos.jabatan; }
+  private get periodeRepo() { return this.uow.repos.periode; }
 
-  constructor() {
-    super();
-    this.repository = new PengurusRepository();
+  async getDropdownOptions(pondokId: string, userPermissions: string[]) {
+    
+    const roles = await this.roleRepo.findAll(pondokId);
+    const positions = await this.jabatanRepo.findAll(pondokId);
+    
+    // For Periode, since it requires status='Aktif', let's check if PeriodeRepo has findActive
+    // Actually, PeriodeRepo doesn't have findActive. But we can fetch all and filter in memory since it's just a dropdown.
+    const allPeriods = await this.periodeRepo.findAll(pondokId);
+    const periods = allPeriods.filter(p => p.status === 'Aktif');
+
+    return { roles, positions, periods };
   }
 
   // Simple mock hash function since we might not have bcrypt available in Edge runtime
@@ -17,17 +36,14 @@ export class PengurusService extends BaseService {
   }
 
   async getAllPenguruss(pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.pengurus.view');
     return this.repository.findAll(pondokId);
   }
 
   async getPengurusById(id: string, pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.pengurus.view');
     return this.repository.findById(id, pondokId);
   }
 
   async createPengurus(data: CreatePengurusInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.pengurus.create');
 
     const existingPengurus = await this.repository.findByEmail(data.email, data.pondokId);
     if (existingPengurus) {
@@ -44,9 +60,9 @@ export class PengurusService extends BaseService {
       createdBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_PENGURUS',
-      entity: 'master_pengurus',
+      entityName: 'master_pengurus',
       entityId: id,
       action: 'CREATE',
       afterData: newPengurus,
@@ -57,7 +73,6 @@ export class PengurusService extends BaseService {
   }
 
   async updatePengurus(id: string, data: UpdatePengurusInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.pengurus.update');
 
     const existingPengurus = await this.repository.findById(id, data.pondokId);
     if (!existingPengurus) {
@@ -82,9 +97,9 @@ export class PengurusService extends BaseService {
       updatedBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_PENGURUS',
-      entity: 'master_pengurus',
+      entityName: 'master_pengurus',
       entityId: id,
       action: 'UPDATE',
       beforeData: existingPengurus,
@@ -96,7 +111,6 @@ export class PengurusService extends BaseService {
   }
 
   async deletePengurus(id: string, pondokId: string, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.pengurus.delete');
 
     const existingPengurus = await this.repository.findById(id, pondokId);
     if (!existingPengurus) {
@@ -105,9 +119,9 @@ export class PengurusService extends BaseService {
 
     const deletedPengurus = await this.repository.softDelete(id, pondokId, userId);
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_PENGURUS',
-      entity: 'master_pengurus',
+      entityName: 'master_pengurus',
       entityId: id,
       action: 'DELETE',
       beforeData: existingPengurus,

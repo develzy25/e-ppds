@@ -1,10 +1,12 @@
 import { db } from '@/db';
+import { DbClient } from '@/infrastructure/database/repositories/base.repository';
 import { masterPermission } from '../../schemas/master.schema';
 import { eq, and, isNull, sql } from 'drizzle-orm';
 import { CreatePermissionInput, UpdatePermissionInput } from '../validators/permission.validator';
 import { PermissionEntity } from '../types/permission.type';
 
 export class PermissionRepository {
+  constructor(protected readonly database: DbClient = db) {}
   async findAll(pondokId: string): Promise<PermissionEntity[]> {
     return db
       .select()

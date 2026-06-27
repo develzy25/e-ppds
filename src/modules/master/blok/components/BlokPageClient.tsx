@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PageHeader, StatisticsCard, FormDialog, ConfirmDelete, ImportExportTools } from '@/components/master';
 import { Map, MapPin, Building2 } from 'lucide-react';
 import { BlokTable } from './BlokTable';
@@ -18,11 +18,7 @@ export function BlokPageClient() {
   const [selectedBlok, setSelectedBlok] = useState<BlokEntity | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchBloks();
-  }, []);
-
-  const fetchBloks = async () => {
+  const fetchBloks = useCallback(async () => {
     setLoading(true);
     const res = await getBloks();
     if (res.success) {
@@ -31,7 +27,14 @@ export function BlokPageClient() {
       showToast({ title: 'Gagal memuat data', message: res.error as string, type: 'error' });
     }
     setLoading(false);
-  };
+   
+  }, []);
+
+  useEffect(() => {
+    fetchBloks();
+  }, [fetchBloks]);
+
+
 
   const handleFormSubmit = async (formData: FormData) => {
     const isEdit = !!selectedBlok;

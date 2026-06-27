@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PageHeader, StatisticsCard, FormDialog, ConfirmDelete, ImportExportTools } from '@/components/master';
 import { Building2, Network, UserSquare2 } from 'lucide-react';
 import { DepartmentTable } from './DepartmentTable';
@@ -18,11 +18,7 @@ export function DepartmentPageClient() {
   const [selectedDepartment, setSelectedDepartment] = useState<DepartmentEntity | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchDepartments();
-  }, []);
-
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     setLoading(true);
     const res = await getDepartments();
     if (res.success) {
@@ -31,7 +27,14 @@ export function DepartmentPageClient() {
       showToast({ title: 'Gagal memuat data', message: res.error as string, type: 'error' });
     }
     setLoading(false);
-  };
+   
+  }, []);
+
+  useEffect(() => {
+    fetchDepartments();
+  }, [fetchDepartments]);
+
+
 
   const handleFormSubmit = async (formData: FormData) => {
     const isEdit = !!selectedDepartment;

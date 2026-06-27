@@ -1,17 +1,23 @@
 'use server';
 
+import { getCurrentUser as getRealUser } from '@/lib/services/auth';
 import { revalidatePath } from 'next/cache';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { PermissionService } from '../services/permission.service';
 import { createPermissionSchema, updatePermissionSchema } from '../validators/permission.validator';
+import { errorResponse, successResponse } from '@/shared/utils/action-error';
 
-const permissionService = new PermissionService();
+const permissionService = new PermissionService(new UnitOfWork());
 
-// Mock function to get current user context
 async function getCurrentUser() {
+  const user = await getRealUser();
+  if (!user) {
+    throw new Error('Unauthorized: Sesi tidak ditemukan atau kedaluwarsa');
+  }
   return {
-    id: 'u1',
-    pondokId: 'pondok-1',
-    permissions: ['master.permission.view', 'master.permission.create', 'master.permission.update', 'master.permission.delete'],
+    id: user.userId,
+    pondokId: user.pondokId,
+    permissions: user.permissions,
   };
 }
 
@@ -19,9 +25,9 @@ export async function getPermissions() {
   try {
     const user = await getCurrentUser();
     const permissions = await permissionService.getAllPermissions(user.pondokId, user.permissions);
-    return { success: true, data: permissions };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(permissions);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -29,9 +35,9 @@ export async function getPermission(id: string) {
   try {
     const user = await getCurrentUser();
     const permission = await permissionService.getPermissionById(id, user.pondokId, user.permissions);
-    return { success: true, data: permission };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(permission);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -49,9 +55,9 @@ export async function createPermission(formData: FormData) {
     const newPermission = await permissionService.createPermission(validatedData, user.id, user.permissions);
     
     revalidatePath('/master/permission');
-    return { success: true, data: newPermission };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(newPermission);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -71,9 +77,9 @@ export async function updatePermission(formData: FormData) {
     const updatedPermission = await permissionService.updatePermission(id, validatedData, user.id, user.permissions);
     
     revalidatePath('/master/permission');
-    return { success: true, data: updatedPermission };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(updatedPermission);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -83,8 +89,8 @@ export async function deletePermission(id: string) {
     const deletedPermission = await permissionService.deletePermission(id, user.pondokId, user.id, user.permissions);
     
     revalidatePath('/master/permission');
-    return { success: true, data: deletedPermission };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(deletedPermission);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }

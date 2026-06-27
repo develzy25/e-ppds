@@ -901,3 +901,81 @@ CREATE INDEX IF NOT EXISTS idx_stock_movements_ref ON stock_movements(inventory_
 CREATE INDEX IF NOT EXISTS idx_student_ledgers_account ON student_ledgers(student_account_id);
 CREATE INDEX IF NOT EXISTS idx_student_accounts_santri ON student_accounts(santri_id);
 CREATE INDEX IF NOT EXISTS idx_service_prices_catalog ON service_prices(catalog_id);
+
+-- =========================================================
+-- MIGRATION: MASTER SANTRI ENTERPRISE
+-- =========================================================
+
+-- 1. Tambahkan full_name dan sinkronisasikan
+ALTER TABLE master_santri ADD COLUMN full_name TEXT;
+UPDATE master_santri SET full_name = name WHERE full_name IS NULL;
+
+-- 2. STATUS & ENROLLMENT
+ALTER TABLE master_santri ADD COLUMN student_status TEXT;
+ALTER TABLE master_santri ADD COLUMN admission_type TEXT;
+ALTER TABLE master_santri ADD COLUMN entry_year TEXT;
+ALTER TABLE master_santri ADD COLUMN registration_wave TEXT;
+ALTER TABLE master_santri ADD COLUMN registration_number TEXT;
+ALTER TABLE master_santri ADD COLUMN previous_school TEXT;
+ALTER TABLE master_santri ADD COLUMN boarding_entry_date TEXT;
+
+-- 3. PERSONAL DATA
+ALTER TABLE master_santri ADD COLUMN photo_url TEXT;
+ALTER TABLE master_santri ADD COLUMN nisn TEXT;
+ALTER TABLE master_santri ADD COLUMN nik TEXT;
+ALTER TABLE master_santri ADD COLUMN family_card_number TEXT;
+ALTER TABLE master_santri ADD COLUMN birth_place TEXT;
+ALTER TABLE master_santri ADD COLUMN birth_date TEXT;
+ALTER TABLE master_santri ADD COLUMN sibling_count INTEGER;
+ALTER TABLE master_santri ADD COLUMN child_order INTEGER;
+ALTER TABLE master_santri ADD COLUMN religion TEXT;
+ALTER TABLE master_santri ADD COLUMN hobby TEXT;
+ALTER TABLE master_santri ADD COLUMN ambition TEXT;
+ALTER TABLE master_santri ADD COLUMN nationality TEXT;
+
+-- 4. MEDICAL & EMERGENCY
+ALTER TABLE master_santri ADD COLUMN blood_type TEXT;
+ALTER TABLE master_santri ADD COLUMN height INTEGER;
+ALTER TABLE master_santri ADD COLUMN weight INTEGER;
+ALTER TABLE master_santri ADD COLUMN medical_history TEXT;
+ALTER TABLE master_santri ADD COLUMN allergies TEXT;
+ALTER TABLE master_santri ADD COLUMN emergency_contact_name TEXT;
+ALTER TABLE master_santri ADD COLUMN emergency_contact_phone TEXT;
+
+-- 5. CONTACT & ADDRESS
+ALTER TABLE master_santri ADD COLUMN student_phone TEXT;
+ALTER TABLE master_santri ADD COLUMN student_email TEXT;
+ALTER TABLE master_santri ADD COLUMN address_line1 TEXT;
+ALTER TABLE master_santri ADD COLUMN address_line2 TEXT;
+ALTER TABLE master_santri ADD COLUMN hamlet TEXT;
+ALTER TABLE master_santri ADD COLUMN village TEXT;
+ALTER TABLE master_santri ADD COLUMN rt TEXT;
+ALTER TABLE master_santri ADD COLUMN rw TEXT;
+ALTER TABLE master_santri ADD COLUMN district TEXT;
+ALTER TABLE master_santri ADD COLUMN city TEXT;
+ALTER TABLE master_santri ADD COLUMN province TEXT;
+ALTER TABLE master_santri ADD COLUMN postal_code TEXT;
+
+-- 6. PARENT (FATHER)
+ALTER TABLE master_santri ADD COLUMN father_nik TEXT;
+ALTER TABLE master_santri ADD COLUMN father_name TEXT;
+ALTER TABLE master_santri ADD COLUMN father_birth_place TEXT;
+ALTER TABLE master_santri ADD COLUMN father_birth_date TEXT;
+ALTER TABLE master_santri ADD COLUMN father_occupation TEXT;
+ALTER TABLE master_santri ADD COLUMN father_company TEXT;
+ALTER TABLE master_santri ADD COLUMN father_job_address TEXT;
+ALTER TABLE master_santri ADD COLUMN father_education TEXT;
+ALTER TABLE master_santri ADD COLUMN father_phone TEXT;
+ALTER TABLE master_santri ADD COLUMN father_income TEXT;
+
+-- 7. PARENT (MOTHER)
+ALTER TABLE master_santri ADD COLUMN mother_nik TEXT;
+ALTER TABLE master_santri ADD COLUMN mother_name TEXT;
+ALTER TABLE master_santri ADD COLUMN mother_birth_place TEXT;
+ALTER TABLE master_santri ADD COLUMN mother_birth_date TEXT;
+ALTER TABLE master_santri ADD COLUMN mother_occupation TEXT;
+ALTER TABLE master_santri ADD COLUMN mother_company TEXT;
+ALTER TABLE master_santri ADD COLUMN mother_job_address TEXT;
+ALTER TABLE master_santri ADD COLUMN mother_education TEXT;
+ALTER TABLE master_santri ADD COLUMN mother_phone TEXT;
+ALTER TABLE master_santri ADD COLUMN mother_income TEXT;

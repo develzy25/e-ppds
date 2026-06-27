@@ -1,32 +1,30 @@
-import { BaseService } from '@/lib/services/base.service';
+import { AuditService } from '@/infrastructure/logger/audit/audit.service';
+import { AuditRepository } from '@/infrastructure/logger/audit/audit.repository';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { BlokRepository } from '../repositories/blok.repository';
 import { CreateBlokInput, UpdateBlokInput } from '../validators/blok.validator';
-import { generateId } from '@/lib/utils';
+import { generateId } from '@/shared/utils';
+import { ConflictError, NotFoundError } from '@/lib/errors';
+import { masterRoom } from '../../schemas/master.schema';
+import { eq, and, isNull } from 'drizzle-orm';
 
-export class BlokService extends BaseService {
-  private repository: BlokRepository;
-
-  constructor() {
-    super();
-    this.repository = new BlokRepository();
-  }
+export class BlokService {
+  constructor(private readonly uow: UnitOfWork) {}
+  private get repository() { return this.uow.repos.blok; }
 
   async getAllBloks(pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.blok.view');
     return this.repository.findAll(pondokId);
   }
 
   async getBlokById(id: string, pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.blok.view');
     return this.repository.findById(id, pondokId);
   }
 
   async createBlok(data: CreateBlokInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.blok.create');
 
     const existingBlok = await this.repository.findByName(data.name, data.pondokId);
     if (existingBlok) {
-      throw new Error(`Blok dengan nama '${data.name}' sudah ada.`);
+      throw new ConflictError(`Blok dengan nama '${data.name}' sudah ada.`);
     }
 
     const id = generateId('blok');
@@ -36,9 +34,9 @@ export class BlokService extends BaseService {
       createdBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_BLOK',
-      entity: 'master_block',
+      entityName: 'master_block',
       entityId: id,
       action: 'CREATE',
       afterData: newBlok,
@@ -49,17 +47,16 @@ export class BlokService extends BaseService {
   }
 
   async updateBlok(id: string, data: UpdateBlokInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.blok.update');
 
     const existingBlok = await this.repository.findById(id, data.pondokId);
     if (!existingBlok) {
-      throw new Error('Blok tidak ditemukan.');
+      throw new NotFoundError('Blok tidak ditemukan.');
     }
 
     if (existingBlok.name !== data.name) {
       const nameCheck = await this.repository.findByName(data.name, data.pondokId);
       if (nameCheck) {
-        throw new Error(`Blok dengan nama '${data.name}' sudah ada.`);
+        throw new ConflictError(`Blok dengan nama '${data.name}' sudah ada.`);
       }
     }
 
@@ -68,9 +65,9 @@ export class BlokService extends BaseService {
       updatedBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_BLOK',
-      entity: 'master_block',
+      entityName: 'master_block',
       entityId: id,
       action: 'UPDATE',
       beforeData: existingBlok,
@@ -82,21 +79,36 @@ export class BlokService extends BaseService {
   }
 
   async deleteBlok(id: string, pondokId: string, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.blok.delete');
 
     const existingBlok = await this.repository.findById(id, pondokId);
     if (!existingBlok) {
-      throw new Error('Blok tidak ditemukan.');
+      throw new NotFoundError('Blok tidak ditemukan.');
     }
 
-    // TODO: Cek apakah blok sedang digunakan oleh kamar atau santri
-    // Jika digunakan, lempar Error
+    const roomExists = await this.uow.repos.client
+      .select({ id: masterRoom.id })
+      .from(masterRoom)
+      .where(and(eq(masterRoom.blockId, id), isNull(masterRoom.deletedAt)))
+      .limit(1);
+
+    if (roomExists.length > 0) {
+      await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
+        module: 'MASTER_BLOK',
+        entityName: 'master_block',
+        entityId: id,
+        action: 'DELETE_FAILED',
+        beforeData: existingBlok,
+        afterData: { reason: 'Data masih digunakan oleh entitas Kamar' },
+        performedBy: userId,
+      });
+      throw new ConflictError('Blok tidak dapat dihapus karena masih digunakan oleh data Kamar.');
+    }
 
     const deletedBlok = await this.repository.softDelete(id, pondokId, userId);
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_BLOK',
-      entity: 'master_block',
+      entityName: 'master_block',
       entityId: id,
       action: 'DELETE',
       beforeData: existingBlok,

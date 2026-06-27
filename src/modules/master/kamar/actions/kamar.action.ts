@@ -1,19 +1,25 @@
 'use server';
 
+import { getCurrentUser as getRealUser } from '@/lib/services/auth';
 import { revalidatePath } from 'next/cache';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { KamarService } from '../services/kamar.service';
 import { BlokService } from '../../blok/services/blok.service';
 import { createKamarSchema, updateKamarSchema } from '../validators/kamar.validator';
+import { errorResponse, successResponse } from '@/shared/utils/action-error';
 
-const kamarService = new KamarService();
-const blokService = new BlokService();
+const kamarService = new KamarService(new UnitOfWork());
+const blokService = new BlokService(new UnitOfWork());
 
-// Mock function to get current user context
 async function getCurrentUser() {
+  const user = await getRealUser();
+  if (!user) {
+    throw new Error('Unauthorized: Sesi tidak ditemukan atau kedaluwarsa');
+  }
   return {
-    id: 'u1',
-    pondokId: 'pondok-1',
-    permissions: ['master.kamar.view', 'master.kamar.create', 'master.kamar.update', 'master.kamar.delete', 'master.blok.view'],
+    id: user.userId,
+    pondokId: user.pondokId,
+    permissions: user.permissions,
   };
 }
 
@@ -21,9 +27,9 @@ export async function getKamars() {
   try {
     const user = await getCurrentUser();
     const kamars = await kamarService.getAllKamars(user.pondokId, user.permissions);
-    return { success: true, data: kamars };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(kamars);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -31,9 +37,9 @@ export async function getBloksForDropdown() {
   try {
     const user = await getCurrentUser();
     const bloks = await blokService.getAllBloks(user.pondokId, user.permissions);
-    return { success: true, data: bloks };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(bloks);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -43,8 +49,8 @@ export async function createKamar(formData: FormData) {
     
     const payload = {
       name: formData.get('name') as string,
-      capacity: formData.get('capacity'),
-      blockId: formData.get('blockId') as string,
+      blokId: formData.get('blokId') as string,
+      capacity: Number(formData.get('capacity')),
       pondokId: user.pondokId,
     };
 
@@ -52,9 +58,9 @@ export async function createKamar(formData: FormData) {
     const newKamar = await kamarService.createKamar(validatedData, user.id, user.permissions);
     
     revalidatePath('/master/kamar');
-    return { success: true, data: newKamar };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(newKamar);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -66,8 +72,8 @@ export async function updateKamar(formData: FormData) {
     const payload = {
       id,
       name: formData.get('name') as string,
-      capacity: formData.get('capacity'),
-      blockId: formData.get('blockId') as string,
+      blokId: formData.get('blokId') as string,
+      capacity: Number(formData.get('capacity')),
       pondokId: user.pondokId,
     };
 
@@ -75,9 +81,9 @@ export async function updateKamar(formData: FormData) {
     const updatedKamar = await kamarService.updateKamar(id, validatedData, user.id, user.permissions);
     
     revalidatePath('/master/kamar');
-    return { success: true, data: updatedKamar };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(updatedKamar);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -87,8 +93,8 @@ export async function deleteKamar(id: string) {
     const deletedKamar = await kamarService.deleteKamar(id, user.pondokId, user.id, user.permissions);
     
     revalidatePath('/master/kamar');
-    return { success: true, data: deletedKamar };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(deletedKamar);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }

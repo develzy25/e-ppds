@@ -1,32 +1,30 @@
-import { BaseService } from '@/lib/services/base.service';
+import { AuditService } from '@/infrastructure/logger/audit/audit.service';
+import { AuditRepository } from '@/infrastructure/logger/audit/audit.repository';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { PermissionRepository } from '../repositories/permission.repository';
 import { CreatePermissionInput, UpdatePermissionInput } from '../validators/permission.validator';
-import { generateId } from '@/lib/utils';
+import { generateId } from '@/shared/utils';
+import { ConflictError, NotFoundError } from '@/lib/errors';
+import { rolePermissions, masterRole } from '../../schemas/master.schema';
+import { eq, and, isNull } from 'drizzle-orm';
 
-export class PermissionService extends BaseService {
-  private repository: PermissionRepository;
-
-  constructor() {
-    super();
-    this.repository = new PermissionRepository();
-  }
+export class PermissionService {
+  constructor(private readonly uow: UnitOfWork) {}
+  private get repository() { return this.uow.repos.permission; }
 
   async getAllPermissions(pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.permission.view');
     return this.repository.findAll(pondokId);
   }
 
   async getPermissionById(id: string, pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.permission.view');
     return this.repository.findById(id, pondokId);
   }
 
   async createPermission(data: CreatePermissionInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.permission.create');
 
     const existingPermission = await this.repository.findByName(data.name, data.pondokId);
     if (existingPermission) {
-      throw new Error(`Permission dengan nama '${data.name}' sudah ada.`);
+      throw new ConflictError(`Permission dengan nama '${data.name}' sudah ada.`);
     }
 
     const id = generateId('perm');
@@ -36,9 +34,9 @@ export class PermissionService extends BaseService {
       createdBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_PERMISSION',
-      entity: 'master_permission',
+      entityName: 'master_permission',
       entityId: id,
       action: 'CREATE',
       afterData: newPermission,
@@ -49,17 +47,16 @@ export class PermissionService extends BaseService {
   }
 
   async updatePermission(id: string, data: UpdatePermissionInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.permission.update');
 
     const existingPermission = await this.repository.findById(id, data.pondokId);
     if (!existingPermission) {
-      throw new Error('Permission tidak ditemukan.');
+      throw new NotFoundError('Permission tidak ditemukan.');
     }
 
     if (existingPermission.name !== data.name) {
       const nameCheck = await this.repository.findByName(data.name, data.pondokId);
       if (nameCheck) {
-        throw new Error(`Permission dengan nama '${data.name}' sudah ada.`);
+        throw new ConflictError(`Permission dengan nama '${data.name}' sudah ada.`);
       }
     }
 
@@ -68,9 +65,9 @@ export class PermissionService extends BaseService {
       updatedBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_PERMISSION',
-      entity: 'master_permission',
+      entityName: 'master_permission',
       entityId: id,
       action: 'UPDATE',
       beforeData: existingPermission,
@@ -82,21 +79,37 @@ export class PermissionService extends BaseService {
   }
 
   async deletePermission(id: string, pondokId: string, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.permission.delete');
 
     const existingPermission = await this.repository.findById(id, pondokId);
     if (!existingPermission) {
-      throw new Error('Permission tidak ditemukan.');
+      throw new NotFoundError('Permission tidak ditemukan.');
     }
 
-    // TODO: Cek apakah permission sedang digunakan oleh role_permissions (relational check)
-    // Jika digunakan, lempar Error
+    const permissionsExists = await this.uow.repos.client
+      .select({ id: rolePermissions.id })
+      .from(rolePermissions)
+      .innerJoin(masterRole, eq(rolePermissions.roleId, masterRole.id))
+      .where(and(eq(rolePermissions.permissionId, id), isNull(masterRole.deletedAt)))
+      .limit(1);
+
+    if (permissionsExists.length > 0) {
+      await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
+        module: 'MASTER_PERMISSION',
+        entityName: 'master_permission',
+        entityId: id,
+        action: 'DELETE_FAILED',
+        beforeData: existingPermission,
+        afterData: { reason: 'Data masih digunakan oleh entitas Role' },
+        performedBy: userId,
+      });
+      throw new ConflictError('Permission tidak dapat dihapus karena masih digunakan oleh data Role.');
+    }
 
     const deletedPermission = await this.repository.softDelete(id, pondokId, userId);
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_PERMISSION',
-      entity: 'master_permission',
+      entityName: 'master_permission',
       entityId: id,
       action: 'DELETE',
       beforeData: existingPermission,

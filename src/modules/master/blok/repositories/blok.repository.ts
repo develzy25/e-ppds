@@ -1,10 +1,12 @@
 import { db } from '@/db';
+import { DbClient } from '@/infrastructure/database/repositories/base.repository';
 import { masterBlock } from '../../schemas/master.schema';
 import { eq, and, isNull, sql } from 'drizzle-orm';
 import { CreateBlokInput, UpdateBlokInput } from '../validators/blok.validator';
 import { BlokEntity } from '../types/blok.type';
 
 export class BlokRepository {
+  constructor(protected readonly database: DbClient = db) {}
   async findAll(pondokId: string): Promise<BlokEntity[]> {
     return db
       .select()

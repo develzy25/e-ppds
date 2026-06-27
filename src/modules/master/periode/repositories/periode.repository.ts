@@ -1,10 +1,12 @@
 import { db } from '@/db';
+import { DbClient } from '@/infrastructure/database/repositories/base.repository';
 import { masterPeriod } from '../../schemas/master.schema';
 import { eq, and, isNull, sql } from 'drizzle-orm';
 import { CreatePeriodeInput, UpdatePeriodeInput } from '../validators/periode.validator';
 import { PeriodeEntity } from '../types/periode.type';
 
 export class PeriodeRepository {
+  constructor(protected readonly database: DbClient = db) {}
   async findAll(pondokId: string): Promise<PeriodeEntity[]> {
     return db
       .select()

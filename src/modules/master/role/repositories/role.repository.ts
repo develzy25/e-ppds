@@ -1,10 +1,12 @@
 import { db } from '@/db';
+import { DbClient } from '@/infrastructure/database/repositories/base.repository';
 import { masterRole } from '../../schemas/master.schema';
 import { eq, and, isNull, sql } from 'drizzle-orm';
 import { CreateRoleInput, UpdateRoleInput } from '../validators/role.validator';
 import { RoleEntity } from '../types/role.type';
 
 export class RoleRepository {
+  constructor(protected readonly database: DbClient = db) {}
   async findAll(pondokId: string): Promise<RoleEntity[]> {
     return db
       .select()

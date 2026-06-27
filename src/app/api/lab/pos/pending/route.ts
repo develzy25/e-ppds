@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { db } from '@/db';
 import { posTransactions } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { ok, badRequest, internalError } from '@/shared/utils/api-response';
+import { getRequestMeta } from '@/shared/utils/request-meta';
 
 export async function GET(req: NextRequest) {
+  const meta = await getRequestMeta();
   try {
     const { searchParams } = new URL(req.url);
     const pondokId = searchParams.get('pondokId');
 
     if (!pondokId) {
-      return NextResponse.json(
-        { success: false, error: 'Pondok ID is required' },
-        { status: 400 }
-      );
+      return badRequest('LAB-400', 'Pondok ID is required', meta);
     }
 
     const pending = await db
@@ -25,12 +25,9 @@ export async function GET(req: NextRequest) {
         )
       );
 
-    return NextResponse.json({ success: true, pending });
+    return ok({ pending }, meta);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json(
-      { success: false, error: errorMessage },
-      { status: 500 }
-    );
+    return internalError('LAB-500', errorMessage, meta);
   }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PageHeader, StatisticsCard, FormDialog, ConfirmDelete, ImportExportTools } from '@/components/master';
 import { KeyRound, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { PermissionTable } from './PermissionTable';
@@ -18,11 +18,7 @@ export function PermissionPageClient() {
   const [selectedPermission, setSelectedPermission] = useState<PermissionEntity | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchPermissions();
-  }, []);
-
-  const fetchPermissions = async () => {
+  const fetchPermissions = useCallback(async () => {
     setLoading(true);
     const res = await getPermissions();
     if (res.success) {
@@ -31,7 +27,14 @@ export function PermissionPageClient() {
       showToast({ title: 'Gagal memuat data', message: res.error as string, type: 'error' });
     }
     setLoading(false);
-  };
+   
+  }, []);
+
+  useEffect(() => {
+    fetchPermissions();
+  }, [fetchPermissions]);
+
+
 
   const handleFormSubmit = async (formData: FormData) => {
     const isEdit = !!selectedPermission;

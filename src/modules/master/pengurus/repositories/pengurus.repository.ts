@@ -12,8 +12,12 @@ import { eq, and, isNull } from 'drizzle-orm';
 import { CreatePengurusInput, UpdatePengurusInput } from '../validators/pengurus.validator';
 import { PengurusEntity, PengurusPosition } from '../types/pengurus.type';
 import { RoleEntity } from '../../role/types/role.type';
+import { BaseRepository, DbClient } from '@/infrastructure/database/repositories/base.repository';
 
-export class PengurusRepository {
+export class PengurusRepository extends BaseRepository<typeof masterPengurus> {
+  constructor(dbClient?: DbClient) {
+    super(masterPengurus, dbClient);
+  }
   async findAll(pondokId: string): Promise<PengurusEntity[]> {
     const rawPengurus = await db
       .select()
@@ -114,7 +118,7 @@ export class PengurusRepository {
   async create(data: CreatePengurusInput & { id: string; passwordHash: string; createdBy: string }): Promise<PengurusEntity> {
     const now = new Date().toISOString();
     
-    return await db.transaction(async (tx) => {
+    return await this.database.transaction(async (tx: any) => {
       const [created] = await tx
         .insert(masterPengurus)
         .values({
@@ -134,7 +138,7 @@ export class PengurusRepository {
       // Insert roles
       if (data.roleIds && data.roleIds.length > 0) {
         await tx.insert(pengurusRoles).values(
-          data.roleIds.map((roleId, index) => ({
+          data.roleIds.map((roleId: string, index: number) => ({
             id: `${data.id}-role-${index}`,
             pengurusId: data.id,
             roleId
@@ -145,7 +149,7 @@ export class PengurusRepository {
       // Insert positions
       if (data.positions && data.positions.length > 0) {
         await tx.insert(pengurusPositions).values(
-          data.positions.map((pos, index) => ({
+          data.positions.map((pos: any, index: number) => ({
             id: `${data.id}-pos-${index}`,
             pengurusId: data.id,
             positionId: pos.positionId,
@@ -162,7 +166,7 @@ export class PengurusRepository {
   async update(id: string, data: UpdatePengurusInput & { passwordHash?: string; updatedBy: string }): Promise<PengurusEntity> {
     const now = new Date().toISOString();
     
-    return await db.transaction(async (tx) => {
+    return await this.database.transaction(async (tx: any) => {
       const updateData: any = {
         name: data.name,
         email: data.email,

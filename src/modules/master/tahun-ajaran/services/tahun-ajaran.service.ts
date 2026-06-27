@@ -1,32 +1,30 @@
-import { BaseService } from '@/lib/services/base.service';
+import { AuditService } from '@/infrastructure/logger/audit/audit.service';
+import { AuditRepository } from '@/infrastructure/logger/audit/audit.repository';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { TahunAjaranRepository } from '../repositories/tahun-ajaran.repository';
 import { CreateTahunAjaranInput, UpdateTahunAjaranInput } from '../validators/tahun-ajaran.validator';
-import { generateId } from '@/lib/utils';
+import { generateId } from '@/shared/utils';
+import { ConflictError, NotFoundError } from '@/lib/errors';
+import { masterSantri } from '../../schemas/master.schema';
+import { eq, and, isNull } from 'drizzle-orm';
 
-export class TahunAjaranService extends BaseService {
-  private repository: TahunAjaranRepository;
-
-  constructor() {
-    super();
-    this.repository = new TahunAjaranRepository();
-  }
+export class TahunAjaranService {
+  constructor(private readonly uow: UnitOfWork) {}
+  private get repository() { return this.uow.repos.tahunAjaran; }
 
   async getAllTahunAjarans(pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.tahun_ajaran.view');
     return this.repository.findAll(pondokId);
   }
 
   async getTahunAjaranById(id: string, pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.tahun_ajaran.view');
     return this.repository.findById(id, pondokId);
   }
 
   async createTahunAjaran(data: CreateTahunAjaranInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.tahun_ajaran.create');
 
     const existingTahunAjaran = await this.repository.findByName(data.name, data.pondokId);
     if (existingTahunAjaran) {
-      throw new Error(`Tahun Ajaran dengan nama '${data.name}' sudah ada.`);
+      throw new ConflictError(`Tahun Ajaran dengan nama '${data.name}' sudah ada.`);
     }
 
     const id = generateId('year');
@@ -36,9 +34,9 @@ export class TahunAjaranService extends BaseService {
       createdBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_TAHUN_AJARAN',
-      entity: 'master_academic_year',
+      entityName: 'master_academic_year',
       entityId: id,
       action: 'CREATE',
       afterData: newTahunAjaran,
@@ -49,17 +47,16 @@ export class TahunAjaranService extends BaseService {
   }
 
   async updateTahunAjaran(id: string, data: UpdateTahunAjaranInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.tahun_ajaran.update');
 
     const existingTahunAjaran = await this.repository.findById(id, data.pondokId);
     if (!existingTahunAjaran) {
-      throw new Error('Tahun Ajaran tidak ditemukan.');
+      throw new NotFoundError('Tahun Ajaran tidak ditemukan.');
     }
 
     if (existingTahunAjaran.name !== data.name) {
       const nameCheck = await this.repository.findByName(data.name, data.pondokId);
       if (nameCheck) {
-        throw new Error(`Tahun Ajaran dengan nama '${data.name}' sudah ada.`);
+        throw new ConflictError(`Tahun Ajaran dengan nama '${data.name}' sudah ada.`);
       }
     }
 
@@ -68,9 +65,9 @@ export class TahunAjaranService extends BaseService {
       updatedBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_TAHUN_AJARAN',
-      entity: 'master_academic_year',
+      entityName: 'master_academic_year',
       entityId: id,
       action: 'UPDATE',
       beforeData: existingTahunAjaran,
@@ -82,21 +79,36 @@ export class TahunAjaranService extends BaseService {
   }
 
   async deleteTahunAjaran(id: string, pondokId: string, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.tahun_ajaran.delete');
 
     const existingTahunAjaran = await this.repository.findById(id, pondokId);
     if (!existingTahunAjaran) {
-      throw new Error('Tahun Ajaran tidak ditemukan.');
+      throw new NotFoundError('Tahun Ajaran tidak ditemukan.');
     }
 
-    // TODO: Cek apakah tahun ajaran sedang digunakan oleh santri
-    // Jika digunakan, lempar Error
+    const santriExists = await this.uow.repos.client
+      .select({ id: masterSantri.id })
+      .from(masterSantri)
+      .where(and(eq(masterSantri.academicYearId, id), isNull(masterSantri.deletedAt)))
+      .limit(1);
+
+    if (santriExists.length > 0) {
+      await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
+        module: 'MASTER_TAHUN_AJARAN',
+        entityName: 'master_academic_year',
+        entityId: id,
+        action: 'DELETE_FAILED',
+        beforeData: existingTahunAjaran,
+        afterData: { reason: 'Data masih digunakan oleh entitas Santri' },
+        performedBy: userId,
+      });
+      throw new ConflictError('Tahun Ajaran tidak dapat dihapus karena masih digunakan oleh data Santri.');
+    }
 
     const deletedTahunAjaran = await this.repository.softDelete(id, pondokId, userId);
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_TAHUN_AJARAN',
-      entity: 'master_academic_year',
+      entityName: 'master_academic_year',
       entityId: id,
       action: 'DELETE',
       beforeData: existingTahunAjaran,

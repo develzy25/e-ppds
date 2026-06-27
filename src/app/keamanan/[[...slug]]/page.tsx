@@ -91,7 +91,7 @@ export default function KeamananDashboard() {
   };
 
   // Columns definitions for Tables
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const permitColumns: ColumnDef<any>[] = [
     { accessorKey: 'id', header: 'ID Izin' },
     { accessorKey: 'santriName', header: 'Nama Santri' },
@@ -128,7 +128,7 @@ export default function KeamananDashboard() {
     }
   ];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const offenseColumns: ColumnDef<any>[] = [
     { accessorKey: 'santriName', header: 'Nama Santri' },
     { accessorKey: 'category', header: 'Kategori' },

@@ -1,4 +1,3 @@
-import { db } from '@/db';
 import { 
   masterSantri,
   masterRoom,
@@ -10,12 +9,60 @@ import { CreateSantriInput, UpdateSantriInput } from '../validators/santri.valid
 import { SantriEntity } from '../types/santri.type';
 import { alias } from 'drizzle-orm/sqlite-core';
 
-export class SantriRepository {
+import { BaseRepository, PaginatedResult } from '@/infrastructure/database/repositories/base.repository';
+import { DbClient } from '@/infrastructure/database/repositories/base.repository';
+
+export class SantriRepository extends BaseRepository<typeof masterSantri> {
+  constructor(dbClient?: DbClient) {
+    super(masterSantri, dbClient);
+  }
+
+  async findAllPaginated(pondokId: string, page: number = 1, limit: number = 20, filters?: Record<string, any>): Promise<PaginatedResult<SantriEntity>> {
+    const classFormal = alias(masterClass, 'classFormal');
+    const classDiniyah = alias(masterClass, 'classDiniyah');
+    const offset = (page - 1) * limit;
+
+    const baseConditions = this.buildBaseConditions(pondokId);
+    
+    // Add additional filters here if needed
+    // if (filters?.status) baseConditions.push(eq(masterSantri.status, filters.status));
+
+    const results = await this.databaseClient
+      .select({
+        santri: masterSantri,
+        kamar: masterRoom,
+        formal: classFormal,
+        diniyah: classDiniyah,
+        academicYear: masterAcademicYear
+      })
+      .from(masterSantri)
+      .leftJoin(masterRoom, eq(masterSantri.roomId, masterRoom.id))
+      .leftJoin(classFormal, eq(masterSantri.classFormalId, classFormal.id))
+      .leftJoin(classDiniyah, eq(masterSantri.classDiniyahId, classDiniyah.id))
+      .leftJoin(masterAcademicYear, eq(masterSantri.academicYearId, masterAcademicYear.id))
+      .where(and(...baseConditions))
+      .limit(limit)
+      .offset(offset);
+
+    const data = results.map((row: any) => ({
+      ...row.santri,
+      kamar: row.kamar || undefined,
+      classFormal: row.formal || undefined,
+      classDiniyah: row.diniyah || undefined,
+      academicYear: row.academicYear || undefined,
+    })) as SantriEntity[];
+
+    const totalItems = await this.countByConditions(pondokId);
+    const meta = this.buildPaginationMeta(totalItems, page, limit, undefined, undefined, filters);
+
+    return { data, meta };
+  }
+
   async findAll(pondokId: string): Promise<SantriEntity[]> {
     const classFormal = alias(masterClass, 'classFormal');
     const classDiniyah = alias(masterClass, 'classDiniyah');
 
-    const results = await db
+    const results = await this.databaseClient
       .select({
         santri: masterSantri,
         kamar: masterRoom,
@@ -30,7 +77,7 @@ export class SantriRepository {
       .leftJoin(masterAcademicYear, eq(masterSantri.academicYearId, masterAcademicYear.id))
       .where(and(eq(masterSantri.pondokId, pondokId), isNull(masterSantri.deletedAt)));
 
-    return results.map(row => ({
+    return results.map((row: any) => ({
       ...row.santri,
       kamar: row.kamar || undefined,
       classFormal: row.formal || undefined,
@@ -43,7 +90,7 @@ export class SantriRepository {
     const classFormal = alias(masterClass, 'classFormal');
     const classDiniyah = alias(masterClass, 'classDiniyah');
 
-    const results = await db
+    const results = await this.databaseClient
       .select({
         santri: masterSantri,
         kamar: masterRoom,
@@ -58,95 +105,62 @@ export class SantriRepository {
       .leftJoin(masterAcademicYear, eq(masterSantri.academicYearId, masterAcademicYear.id))
       .where(and(eq(masterSantri.id, id), eq(masterSantri.pondokId, pondokId), isNull(masterSantri.deletedAt)))
       .limit(1);
-    
-    if (!results.length) return undefined;
 
+    if (results.length === 0) return undefined;
+    const row = results[0] as any;
     return {
-      ...results[0].santri,
-      kamar: results[0].kamar || undefined,
-      classFormal: results[0].formal || undefined,
-      classDiniyah: results[0].diniyah || undefined,
-      academicYear: results[0].academicYear || undefined,
+      ...row.santri,
+      kamar: row.kamar || undefined,
+      classFormal: row.formal || undefined,
+      classDiniyah: row.diniyah || undefined,
+      academicYear: row.academicYear || undefined,
     } as SantriEntity;
   }
 
   async findByNis(nis: string, pondokId: string): Promise<SantriEntity | undefined> {
-    const result = await db
+    const results = await this.databaseClient
       .select()
       .from(masterSantri)
-      .where(
-        and(
-          eq(masterSantri.nis, nis), 
-          eq(masterSantri.pondokId, pondokId), 
-          isNull(masterSantri.deletedAt)
-        )
-      )
+      .where(and(eq(masterSantri.nis, nis), eq(masterSantri.pondokId, pondokId), isNull(masterSantri.deletedAt)))
       .limit(1);
     
-    return result[0] as SantriEntity;
+    return results[0] as SantriEntity | undefined;
   }
 
   async create(data: CreateSantriInput & { id: string; createdBy: string }): Promise<SantriEntity> {
     const now = new Date().toISOString();
-    
-    const [created] = await db
+    const result = await this.databaseClient
       .insert(masterSantri)
       .values({
-        id: data.id,
-        nis: data.nis,
-        name: data.name,
-        gender: data.gender,
-        statusAktif: data.statusAktif,
-        roomId: data.roomId || null,
-        classFormalId: data.classFormalId || null,
-        classDiniyahId: data.classDiniyahId || null,
-        academicYearId: data.academicYearId,
-        pondokId: data.pondokId,
+        ...data,
         createdAt: now,
         updatedAt: now,
-        createdBy: data.createdBy,
-        updatedBy: data.createdBy,
       })
       .returning();
       
-    return created as SantriEntity;
+    return result[0] as SantriEntity;
   }
 
-  async update(id: string, data: UpdateSantriInput & { updatedBy: string }): Promise<SantriEntity> {
-    const now = new Date().toISOString();
-    
-    const [updated] = await db
+  async update(id: string, pondokId: string, data: UpdateSantriInput & { updatedBy: string }): Promise<SantriEntity> {
+    const result = await this.databaseClient
       .update(masterSantri)
       .set({
-        nis: data.nis,
-        name: data.name,
-        gender: data.gender,
-        statusAktif: data.statusAktif,
-        roomId: data.roomId || null,
-        classFormalId: data.classFormalId || null,
-        classDiniyahId: data.classDiniyahId || null,
-        academicYearId: data.academicYearId,
-        updatedAt: now,
-        updatedBy: data.updatedBy,
-      })
-      .where(and(eq(masterSantri.id, id), eq(masterSantri.pondokId, data.pondokId)))
-      .returning();
-      
-    return updated as SantriEntity;
-  }
-
-  async softDelete(id: string, pondokId: string, deletedBy: string): Promise<SantriEntity> {
-    const now = new Date().toISOString();
-    
-    const [deleted] = await db
-      .update(masterSantri)
-      .set({
-        deletedAt: now,
-        deletedBy: deletedBy,
+        ...data,
+        updatedAt: new Date().toISOString(),
       })
       .where(and(eq(masterSantri.id, id), eq(masterSantri.pondokId, pondokId)))
       .returning();
       
-    return deleted as SantriEntity;
+    return result[0] as SantriEntity;
+  }
+
+  async softDelete(id: string, pondokId: string, deletedBy: string): Promise<void> {
+    await this.databaseClient
+      .update(masterSantri)
+      .set({
+        deletedAt: new Date().toISOString(),
+        deletedBy,
+      })
+      .where(and(eq(masterSantri.id, id), eq(masterSantri.pondokId, pondokId)));
   }
 }

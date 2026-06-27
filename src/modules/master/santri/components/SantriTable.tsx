@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { StandardDataTable } from '@/components/master/StandardDataTable';
+import { StandardDataTable, PaginationMeta } from '@/components/master/StandardDataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { SantriEntity } from '../types/santri.type';
 import { Button } from '@/components/ui/button';
@@ -9,12 +9,14 @@ import { Edit2, Trash2 } from 'lucide-react';
 import { StatusBadge } from '@/components/master';
 
 interface SantriTableProps {
+  meta?: PaginationMeta;
+  onPageChange?: (page: number) => void;
   data: SantriEntity[];
   onEdit: (santri: SantriEntity) => void;
   onDelete: (santriId: string) => void;
 }
 
-export function SantriTable({ data, onEdit, onDelete }: SantriTableProps) {
+export function SantriTable({ data, onEdit, onDelete, meta, onPageChange }: SantriTableProps) {
   const columns: ColumnDef<SantriEntity>[] = [
     {
       accessorKey: 'nis',
@@ -63,5 +65,5 @@ export function SantriTable({ data, onEdit, onDelete }: SantriTableProps) {
     },
   ];
 
-  return <StandardDataTable columns={columns} data={data} searchKey="name" />;
+  return <StandardDataTable columns={columns} data={data} searchKey="name" meta={meta} onPageChange={onPageChange} />;
 }

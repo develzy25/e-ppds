@@ -1,0 +1,3 @@
+# API Pattern: repositories
+
+TBD

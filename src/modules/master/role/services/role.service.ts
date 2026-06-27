@@ -1,32 +1,30 @@
-import { BaseService } from '@/lib/services/base.service';
+import { AuditService } from '@/infrastructure/logger/audit/audit.service';
+import { AuditRepository } from '@/infrastructure/logger/audit/audit.repository';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { RoleRepository } from '../repositories/role.repository';
 import { CreateRoleInput, UpdateRoleInput } from '../validators/role.validator';
-import { generateId } from '@/lib/utils';
+import { generateId } from '@/shared/utils';
+import { ConflictError, NotFoundError } from '@/lib/errors';
+import { pengurusRoles, masterPengurus } from '../../schemas/master.schema';
+import { eq, and, isNull } from 'drizzle-orm';
 
-export class RoleService extends BaseService {
-  private repository: RoleRepository;
-
-  constructor() {
-    super();
-    this.repository = new RoleRepository();
-  }
+export class RoleService {
+  constructor(private readonly uow: UnitOfWork) {}
+  private get repository() { return this.uow.repos.role; }
 
   async getAllRoles(pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.role.view');
     return this.repository.findAll(pondokId);
   }
 
   async getRoleById(id: string, pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.role.view');
     return this.repository.findById(id, pondokId);
   }
 
   async createRole(data: CreateRoleInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.role.create');
 
     const existingRole = await this.repository.findByName(data.name, data.pondokId);
     if (existingRole) {
-      throw new Error(`Role dengan nama '${data.name}' sudah ada.`);
+      throw new ConflictError(`Role dengan nama '${data.name}' sudah ada.`);
     }
 
     const id = generateId('role');
@@ -36,9 +34,9 @@ export class RoleService extends BaseService {
       createdBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_ROLE',
-      entity: 'master_role',
+      entityName: 'master_role',
       entityId: id,
       action: 'CREATE',
       afterData: newRole,
@@ -49,17 +47,16 @@ export class RoleService extends BaseService {
   }
 
   async updateRole(id: string, data: UpdateRoleInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.role.update');
 
     const existingRole = await this.repository.findById(id, data.pondokId);
     if (!existingRole) {
-      throw new Error('Role tidak ditemukan.');
+      throw new NotFoundError('Role tidak ditemukan.');
     }
 
     if (existingRole.name !== data.name) {
       const nameCheck = await this.repository.findByName(data.name, data.pondokId);
       if (nameCheck) {
-        throw new Error(`Role dengan nama '${data.name}' sudah ada.`);
+        throw new ConflictError(`Role dengan nama '${data.name}' sudah ada.`);
       }
     }
 
@@ -68,9 +65,9 @@ export class RoleService extends BaseService {
       updatedBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_ROLE',
-      entity: 'master_role',
+      entityName: 'master_role',
       entityId: id,
       action: 'UPDATE',
       beforeData: existingRole,
@@ -82,21 +79,37 @@ export class RoleService extends BaseService {
   }
 
   async deleteRole(id: string, pondokId: string, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.role.delete');
 
     const existingRole = await this.repository.findById(id, pondokId);
     if (!existingRole) {
-      throw new Error('Role tidak ditemukan.');
+      throw new NotFoundError('Role tidak ditemukan.');
     }
 
-    // TODO: Cek apakah role sedang digunakan oleh pengurus_roles (relational check)
-    // Jika digunakan, lempar Error
+    const rolesExists = await this.uow.repos.client
+      .select({ id: pengurusRoles.id })
+      .from(pengurusRoles)
+      .innerJoin(masterPengurus, eq(pengurusRoles.pengurusId, masterPengurus.id))
+      .where(and(eq(pengurusRoles.roleId, id), isNull(masterPengurus.deletedAt)))
+      .limit(1);
+
+    if (rolesExists.length > 0) {
+      await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
+        module: 'MASTER_ROLE',
+        entityName: 'master_role',
+        entityId: id,
+        action: 'DELETE_FAILED',
+        beforeData: existingRole,
+        afterData: { reason: 'Data masih digunakan oleh entitas Pengurus (Role aktif)' },
+        performedBy: userId,
+      });
+      throw new ConflictError('Role tidak dapat dihapus karena masih digunakan oleh data Pengurus.');
+    }
 
     const deletedRole = await this.repository.softDelete(id, pondokId, userId);
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_ROLE',
-      entity: 'master_role',
+      entityName: 'master_role',
       entityId: id,
       action: 'DELETE',
       beforeData: existingRole,

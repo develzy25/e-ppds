@@ -1,10 +1,12 @@
 import { db } from '@/db';
+import { DbClient } from '@/infrastructure/database/repositories/base.repository';
 import { masterDepartment } from '../../schemas/master.schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { CreateDepartmentInput, UpdateDepartmentInput } from '../validators/department.validator';
 import { DepartmentEntity } from '../types/department.type';
 
 export class DepartmentRepository {
+  constructor(protected readonly database: DbClient = db) {}
   async findAll(pondokId: string): Promise<DepartmentEntity[]> {
     return db
       .select()

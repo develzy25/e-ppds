@@ -1,0 +1,12 @@
+name = "ppds-d1-gateway"
+main = "src/index.ts"
+compatibility_date = "2024-03-20"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "e-ppds-db"
+database_id = "1995d927-986b-483f-b6d8-805e3c59508d"
+
+[vars]
+# API Token (Secret) -> will be set via wrangler secret put API_TOKEN in production
+API_TOKEN = "dev-secret-token"

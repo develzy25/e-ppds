@@ -22,7 +22,13 @@ export async function GET(
 
     if (txResult.length === 0) {
       return NextResponse.json(
-        { valid: false, error: 'Transaksi tidak ditemukan di database' },
+        {
+          success: false,
+          error: {
+            code: 'VERIFY-404',
+            message: 'Transaksi tidak ditemukan di database'
+          }
+        },
         { status: 404 }
       );
     }
@@ -34,7 +40,13 @@ export async function GET(
       const expectedSignature = generateReceiptSignature(tx.id, tx.totalAmount, tx.pondokId);
       if (signature !== expectedSignature) {
         return NextResponse.json(
-          { valid: false, error: 'Tanda tangan digital tidak cocok! Struk ini tidak sah/telah dimanipulasi.' },
+          {
+            success: false,
+            error: {
+              code: 'VERIFY-400',
+              message: 'Tanda tangan digital tidak cocok! Struk ini tidak sah/telah dimanipulasi.'
+            }
+          },
           { status: 400 }
         );
       }
@@ -47,25 +59,36 @@ export async function GET(
       .where(eq(posTransactionItems.transactionId, tx.id));
 
     return NextResponse.json({
-      valid: true,
-      transaction: {
-        id: tx.id,
-        type: tx.transactionType,
-        totalAmount: tx.totalAmount,
-        status: tx.status,
-        cashierName: tx.cashierName,
-        createdAt: tx.createdAt,
-        items: items.map((item) => ({
-          id: item.id,
-          qty: item.qty,
-          priceAtSale: item.priceAtSale,
-        })),
+      success: true,
+      data: {
+        valid: true,
+        transaction: {
+          id: tx.id,
+          type: tx.transactionType,
+          totalAmount: tx.totalAmount,
+          status: tx.status,
+          cashierName: tx.cashierName,
+          createdAt: tx.createdAt,
+          items: items.map((item) => ({
+            id: item.id,
+            qty: item.qty,
+            priceAtSale: item.priceAtSale,
+          })),
+        },
       },
+      error: null,
+      meta: {}
     });
   } catch (error) {
     const errMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { valid: false, error: errMessage },
+      {
+        success: false,
+        error: {
+          code: 'VERIFY-500',
+          message: errMessage
+        }
+      },
       { status: 500 }
     );
   }

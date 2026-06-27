@@ -1,5 +1,6 @@
 import { sqliteTable, text, real, integer, index } from 'drizzle-orm/sqlite-core';
 import { masterSantri, masterAcademicYear } from '../../master/schemas/master.schema';
+import { pondoks } from '@/modules/core/schemas/core.schema';
 
 // -------------------------------------------------------------
 // MASTER KEUANGAN
@@ -9,6 +10,13 @@ export const keuanganMasterJenisTagihan = sqliteTable('keuangan_master_jenis_tag
   name: text('name').notNull(), // e.g. "SPP", "Daftar Ulang"
   category: text('category').notNull(), // "Bulanan" | "Tahunan" | "Insidental"
   description: text('description'),
+    pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+    deletedAt: text('deleted_at'),
+    createdBy: text('created_by'),
+    updatedBy: text('updated_by'),
+    deletedBy: text('deleted_by'),
   isActive: integer('is_active', { mode: 'boolean' }).default(true).notNull(),
 });
 
@@ -18,6 +26,13 @@ export const keuanganMasterTarif = sqliteTable('keuangan_master_tarif', {
   academicYearId: text('academic_year_id').notNull().references(() => masterAcademicYear.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   amount: real('amount').notNull(),
   description: text('description'),
+    pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+    deletedAt: text('deleted_at'),
+    createdBy: text('created_by'),
+    updatedBy: text('updated_by'),
+    deletedBy: text('deleted_by'),
 });
 
 // -------------------------------------------------------------
@@ -36,6 +51,7 @@ export const keuanganTagihan = sqliteTable('keuangan_tagihan', {
   dueDate: text('due_date'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
+    pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
 }, (t) => ({
   idxSantriTagihan: index('idx_santri_tagihan').on(t.santriId, t.status),
 }));
@@ -86,3 +102,6 @@ export const keuanganRekonsiliasi = sqliteTable('keuangan_rekonsiliasi', {
   notes: text('notes'),
   resolvedAt: text('resolved_at'),
 });
+
+
+

@@ -240,6 +240,7 @@ export default function MediaDashboard() {
                     <div className="grid grid-cols-2 gap-1.5">
                       {doc.photos.map((p, idx) => (
                         <div key={idx} className="relative aspect-video rounded-lg overflow-hidden border border-border bg-slate-900 flex items-center justify-center">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={p.url} alt="pic" className="absolute inset-0 h-full w-full object-cover opacity-60" />
                           <span className="z-10 text-[9px] font-bold text-white bg-black/60 px-1 py-0.5 rounded font-mono">
                             {p.sizeMb} MB

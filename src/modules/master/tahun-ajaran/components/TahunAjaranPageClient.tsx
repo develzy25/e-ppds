@@ -7,7 +7,7 @@ import { TahunAjaranTable } from './TahunAjaranTable';
 import { TahunAjaranForm } from './TahunAjaranForm';
 import { TahunAjaranEntity } from '../types/tahun-ajaran.type';
 import { getTahunAjarans, createTahunAjaran, updateTahunAjaran, deleteTahunAjaran } from '../actions/tahun-ajaran.action';
-import { useCrudPage } from '@/lib/hooks/useCrudPage';
+import { useCrudPage } from '@/shared/hooks/useCrudPage';
 
 export function TahunAjaranPageClient() {
   const {

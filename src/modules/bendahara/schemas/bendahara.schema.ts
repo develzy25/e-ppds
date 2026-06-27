@@ -124,3 +124,12 @@ export const bendaharaJurnalDetail = sqliteTable('bendahara_jurnal_detail', {
   debit: real('debit').notNull().default(0),
   credit: real('credit').notNull().default(0),
 });
+
+
+import { sqliteTable as sqliteTableGenbendahara, text as textGenbendahara } from 'drizzle-orm/sqlite-core';
+import { sql as sqlGenbendahara } from 'drizzle-orm';
+export const bendaharaTable = sqliteTableGenbendahara('bendahara_gen', {
+  id: textGenbendahara('id').primaryKey(),
+  name: textGenbendahara('name').notNull(),
+  pondokId: textGenbendahara('pondok_id').notNull(),
+});

@@ -1,19 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { db } from '@/db';
 import { cashBooks, cashMovements } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { ok, badRequest, internalError } from '@/shared/utils/api-response';
+import { getRequestMeta } from '@/shared/utils/request-meta';
 
 export async function GET(req: NextRequest) {
+  const meta = await getRequestMeta();
   try {
     const { searchParams } = new URL(req.url);
     const date = searchParams.get('date');
     const pondokId = searchParams.get('pondokId');
 
     if (!date || !pondokId) {
-      return NextResponse.json(
-        { success: false, error: 'Date and Pondok ID are required' },
-        { status: 400 }
-      );
+      return badRequest('LAB-400', 'Date and Pondok ID are required', meta);
     }
 
     const cashBook = await db
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
           eq(cashBooks.pondokId, pondokId)
         )
       )
-      .then((res) => res[0] || null);
+      .then((res: Record<string, unknown>[]) => res[0] || null);
 
     const movements = await db
       .select()
@@ -37,12 +37,9 @@ export async function GET(req: NextRequest) {
         )
       );
 
-    return NextResponse.json({ success: true, cashBook, movements });
+    return ok({ cashBook, movements }, meta);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json(
-      { success: false, error: errorMessage },
-      { status: 500 }
-    );
+    return internalError('LAB-500', errorMessage, meta);
   }
 }

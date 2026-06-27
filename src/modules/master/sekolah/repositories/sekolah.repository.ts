@@ -1,10 +1,12 @@
 import { db } from '@/db';
+import { DbClient } from '@/infrastructure/database/repositories/base.repository';
 import { masterSchool } from '../../schemas/master.schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { CreateSekolahInput, UpdateSekolahInput } from '../validators/sekolah.validator';
 import { SekolahEntity } from '../types/sekolah.type';
 
 export class SekolahRepository {
+  constructor(protected readonly database: DbClient = db) {}
   async findAll(pondokId: string): Promise<SekolahEntity[]> {
     return db
       .select()

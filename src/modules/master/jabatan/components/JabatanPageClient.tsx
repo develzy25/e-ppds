@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PageHeader, StatisticsCard, FormDialog, ConfirmDelete, ImportExportTools } from '@/components/master';
 import { Briefcase, Building2, UserCircle } from 'lucide-react';
 import { JabatanTable } from './JabatanTable';
@@ -18,11 +18,7 @@ export function JabatanPageClient() {
   const [selectedJabatan, setSelectedJabatan] = useState<JabatanEntity | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchJabatans();
-  }, []);
-
-  const fetchJabatans = async () => {
+  const fetchJabatans = useCallback(async () => {
     setLoading(true);
     const res = await getJabatans();
     if (res.success) {
@@ -31,7 +27,14 @@ export function JabatanPageClient() {
       showToast({ title: 'Gagal memuat data', message: res.error as string, type: 'error' });
     }
     setLoading(false);
-  };
+   
+  }, []);
+
+  useEffect(() => {
+    fetchJabatans();
+  }, [fetchJabatans]);
+
+
 
   const handleFormSubmit = async (formData: FormData) => {
     const isEdit = !!selectedJabatan;

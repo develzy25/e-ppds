@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PageHeader, StatisticsCard, FormDialog, ConfirmDelete, ImportExportTools } from '@/components/master';
 import { BedDouble, Building, Users } from 'lucide-react';
 import { KamarTable } from './KamarTable';
@@ -18,11 +18,7 @@ export function KamarPageClient() {
   const [selectedKamar, setSelectedKamar] = useState<KamarEntity | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchKamars();
-  }, []);
-
-  const fetchKamars = async () => {
+  const fetchKamars = useCallback(async () => {
     setLoading(true);
     const res = await getKamars();
     if (res.success) {
@@ -31,7 +27,14 @@ export function KamarPageClient() {
       showToast({ title: 'Gagal memuat data', message: res.error as string, type: 'error' });
     }
     setLoading(false);
-  };
+   
+  }, []);
+
+  useEffect(() => {
+    fetchKamars();
+  }, [fetchKamars]);
+
+
 
   const handleFormSubmit = async (formData: FormData) => {
     const isEdit = !!selectedKamar;

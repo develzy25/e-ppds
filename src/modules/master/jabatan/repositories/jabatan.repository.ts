@@ -1,10 +1,12 @@
 import { db } from '@/db';
+import { DbClient } from '@/infrastructure/database/repositories/base.repository';
 import { masterPosition, masterDepartment } from '../../schemas/master.schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { CreateJabatanInput, UpdateJabatanInput } from '../validators/jabatan.validator';
 import { JabatanEntity } from '../types/jabatan.type';
 
 export class JabatanRepository {
+  constructor(protected readonly database: DbClient = db) {}
   async findAll(pondokId: string): Promise<JabatanEntity[]> {
     const results = await db
       .select({

@@ -1,17 +1,23 @@
 'use server';
 
+import { getCurrentUser as getRealUser } from '@/lib/services/auth';
 import { revalidatePath } from 'next/cache';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { PeriodeService } from '../services/periode.service';
 import { createPeriodeSchema, updatePeriodeSchema } from '../validators/periode.validator';
+import { errorResponse, successResponse } from '@/shared/utils/action-error';
 
-const periodeService = new PeriodeService();
+const periodeService = new PeriodeService(new UnitOfWork());
 
-// Mock function to get current user context
 async function getCurrentUser() {
+  const user = await getRealUser();
+  if (!user) {
+    throw new Error('Unauthorized: Sesi tidak ditemukan atau kedaluwarsa');
+  }
   return {
-    id: 'u1',
-    pondokId: 'pondok-1',
-    permissions: ['master.periode.view', 'master.periode.create', 'master.periode.update', 'master.periode.delete'],
+    id: user.userId,
+    pondokId: user.pondokId,
+    permissions: user.permissions,
   };
 }
 
@@ -19,9 +25,9 @@ export async function getPeriodes() {
   try {
     const user = await getCurrentUser();
     const periodes = await periodeService.getAllPeriodes(user.pondokId, user.permissions);
-    return { success: true, data: periodes };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(periodes);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -29,9 +35,9 @@ export async function getPeriode(id: string) {
   try {
     const user = await getCurrentUser();
     const periode = await periodeService.getPeriodeById(id, user.pondokId, user.permissions);
-    return { success: true, data: periode };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(periode);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -49,9 +55,9 @@ export async function createPeriode(formData: FormData) {
     const newPeriode = await periodeService.createPeriode(validatedData, user.id, user.permissions);
     
     revalidatePath('/master/periode');
-    return { success: true, data: newPeriode };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(newPeriode);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -71,9 +77,9 @@ export async function updatePeriode(formData: FormData) {
     const updatedPeriode = await periodeService.updatePeriode(id, validatedData, user.id, user.permissions);
     
     revalidatePath('/master/periode');
-    return { success: true, data: updatedPeriode };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(updatedPeriode);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -83,8 +89,8 @@ export async function deletePeriode(id: string) {
     const deletedPeriode = await periodeService.deletePeriode(id, user.pondokId, user.id, user.permissions);
     
     revalidatePath('/master/periode');
-    return { success: true, data: deletedPeriode };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(deletedPeriode);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }

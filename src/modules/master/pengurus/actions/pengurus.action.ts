@@ -1,20 +1,23 @@
 'use server';
 
+import { getCurrentUser as getRealUser } from '@/lib/services/auth';
 import { revalidatePath } from 'next/cache';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { PengurusService } from '../services/pengurus.service';
 import { createPengurusSchema, updatePengurusSchema } from '../validators/pengurus.validator';
-import { db } from '@/db';
-import { masterRole, masterPosition, masterPeriod } from '../../schemas/master.schema';
-import { eq, and, isNull } from 'drizzle-orm';
+import { errorResponse, successResponse } from '@/shared/utils/action-error';
 
-const pengurusService = new PengurusService();
+const pengurusService = new PengurusService(new UnitOfWork());
 
-// Mock function to get current user context
 async function getCurrentUser() {
+  const user = await getRealUser();
+  if (!user) {
+    throw new Error('Unauthorized: Sesi tidak ditemukan atau kedaluwarsa');
+  }
   return {
-    id: 'u1',
-    pondokId: 'pondok-1',
-    permissions: ['master.pengurus.view', 'master.pengurus.create', 'master.pengurus.update', 'master.pengurus.delete'],
+    id: user.userId,
+    pondokId: user.pondokId,
+    permissions: user.permissions,
   };
 }
 
@@ -22,35 +25,19 @@ export async function getPenguruss() {
   try {
     const user = await getCurrentUser();
     const penguruss = await pengurusService.getAllPenguruss(user.pondokId, user.permissions);
-    return { success: true, data: penguruss };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(penguruss);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
 export async function getPengurusDropdownOptions() {
   try {
     const user = await getCurrentUser();
-    
-    // Fetch Roles
-    const roles = await db.select().from(masterRole).where(and(eq(masterRole.pondokId, user.pondokId), isNull(masterRole.deletedAt)));
-    
-    // Fetch Positions
-    const positions = await db.select().from(masterPosition).where(and(eq(masterPosition.pondokId, user.pondokId), isNull(masterPosition.deletedAt)));
-    
-    // Fetch Periods
-    const periods = await db.select().from(masterPeriod).where(and(eq(masterPeriod.pondokId, user.pondokId), isNull(masterPeriod.deletedAt), eq(masterPeriod.status, 'Aktif')));
-
-    return { 
-      success: true, 
-      data: {
-        roles,
-        positions,
-        periods
-      } 
-    };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    const options = await pengurusService.getDropdownOptions(user.pondokId, user.permissions);
+    return successResponse(options);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -58,8 +45,6 @@ export async function createPengurus(formData: FormData) {
   try {
     const user = await getCurrentUser();
     
-    // Parsing nested arrays from formData is tricky.
-    // Assuming formData has a field 'data' which is a JSON string of the payload
     const payloadStr = formData.get('data') as string;
     if (!payloadStr) throw new Error('Data tidak ditemukan');
 
@@ -73,9 +58,9 @@ export async function createPengurus(formData: FormData) {
     const newPengurus = await pengurusService.createPengurus(validatedData, user.id, user.permissions);
     
     revalidatePath('/master/pengurus');
-    return { success: true, data: newPengurus };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(newPengurus);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -96,9 +81,9 @@ export async function updatePengurus(formData: FormData) {
     const updatedPengurus = await pengurusService.updatePengurus(validatedData.id, validatedData, user.id, user.permissions);
     
     revalidatePath('/master/pengurus');
-    return { success: true, data: updatedPengurus };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(updatedPengurus);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -108,8 +93,8 @@ export async function deletePengurus(id: string) {
     const deletedPengurus = await pengurusService.deletePengurus(id, user.pondokId, user.id, user.permissions);
     
     revalidatePath('/master/pengurus');
-    return { success: true, data: deletedPengurus };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(deletedPengurus);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }

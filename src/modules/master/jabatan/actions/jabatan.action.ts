@@ -1,19 +1,25 @@
 'use server';
 
+import { getCurrentUser as getRealUser } from '@/lib/services/auth';
 import { revalidatePath } from 'next/cache';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { JabatanService } from '../services/jabatan.service';
 import { DepartmentService } from '../../department/services/department.service';
 import { createJabatanSchema, updateJabatanSchema } from '../validators/jabatan.validator';
+import { errorResponse, successResponse } from '@/shared/utils/action-error';
 
-const jabatanService = new JabatanService();
-const departmentService = new DepartmentService();
+const jabatanService = new JabatanService(new UnitOfWork());
+const departmentService = new DepartmentService(new UnitOfWork());
 
-// Mock function to get current user context
 async function getCurrentUser() {
+  const user = await getRealUser();
+  if (!user) {
+    throw new Error('Unauthorized: Sesi tidak ditemukan atau kedaluwarsa');
+  }
   return {
-    id: 'u1',
-    pondokId: 'pondok-1',
-    permissions: ['master.jabatan.view', 'master.jabatan.create', 'master.jabatan.update', 'master.jabatan.delete', 'master.department.view'],
+    id: user.userId,
+    pondokId: user.pondokId,
+    permissions: user.permissions,
   };
 }
 
@@ -21,9 +27,9 @@ export async function getJabatans() {
   try {
     const user = await getCurrentUser();
     const jabatans = await jabatanService.getAllJabatans(user.pondokId, user.permissions);
-    return { success: true, data: jabatans };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(jabatans);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -31,9 +37,9 @@ export async function getDepartmentsForDropdown() {
   try {
     const user = await getCurrentUser();
     const departments = await departmentService.getAllDepartments(user.pondokId, user.permissions);
-    return { success: true, data: departments };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(departments);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -51,9 +57,9 @@ export async function createJabatan(formData: FormData) {
     const newJabatan = await jabatanService.createJabatan(validatedData, user.id, user.permissions);
     
     revalidatePath('/master/jabatan');
-    return { success: true, data: newJabatan };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(newJabatan);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -73,9 +79,9 @@ export async function updateJabatan(formData: FormData) {
     const updatedJabatan = await jabatanService.updateJabatan(id, validatedData, user.id, user.permissions);
     
     revalidatePath('/master/jabatan');
-    return { success: true, data: updatedJabatan };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(updatedJabatan);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -85,8 +91,8 @@ export async function deleteJabatan(id: string) {
     const deletedJabatan = await jabatanService.deleteJabatan(id, user.pondokId, user.id, user.permissions);
     
     revalidatePath('/master/jabatan');
-    return { success: true, data: deletedJabatan };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(deletedJabatan);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }

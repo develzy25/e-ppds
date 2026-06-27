@@ -1,10 +1,12 @@
 import { db } from '@/db';
+import { DbClient } from '@/infrastructure/database/repositories/base.repository';
 import { masterRoom, masterBlock } from '../../schemas/master.schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { CreateKamarInput, UpdateKamarInput } from '../validators/kamar.validator';
 import { KamarEntity } from '../types/kamar.type';
 
 export class KamarRepository {
+  constructor(protected readonly database: DbClient = db) {}
   async findAll(pondokId: string): Promise<KamarEntity[]> {
     const results = await db
       .select({

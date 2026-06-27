@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PageHeader, StatisticsCard, FormDialog, ConfirmDelete, ImportExportTools } from '@/components/master';
 import { User, Users, GraduationCap } from 'lucide-react';
 import { SantriTable } from './SantriTable';
@@ -8,30 +8,35 @@ import { SantriForm } from './SantriForm';
 import { SantriEntity } from '../types/santri.type';
 import { getSantris, createSantri, updateSantri, deleteSantri } from '../actions/santri.action';
 import { useApp } from '@/context/AppContext';
+import { PaginationMeta } from '@/components/master/StandardDataTable';
 
 export function SantriPageClient() {
   const { showToast } = useApp();
   const [santris, setSantris] = useState<SantriEntity[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | undefined>();
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedSantri, setSelectedSantri] = useState<SantriEntity | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchSantris();
-  }, []);
-
-  async function fetchSantris() {
+  const fetchSantris = useCallback(async (pageNum: number = 1) => {
     setLoading(true);
-    const res = await getSantris();
+    const res = await getSantris(pageNum, 20);
     if (res.success) {
       setSantris(res.data as SantriEntity[]);
+      if (res.meta) setMeta(res.meta as PaginationMeta);
     } else {
       showToast({ title: 'Gagal memuat data', message: res.error as string, type: 'error' });
     }
     setLoading(false);
-  }
+   
+  }, []);
+
+  useEffect(() => {
+    fetchSantris(page);
+  }, [page, fetchSantris]);
 
   const handleFormSubmit = async (formData: FormData) => {
     const isEdit = !!selectedSantri;
@@ -51,7 +56,7 @@ export function SantriPageClient() {
     if (res.success) {
       showToast({ title: 'Berhasil', message: `Santri berhasil di${isEdit ? 'perbarui' : 'tambahkan'}`, type: 'success' });
       setIsFormOpen(false);
-      fetchSantris();
+      fetchSantris(page);
     } else {
       showToast({ title: 'Gagal', message: res.error as string, type: 'error' });
     }
@@ -62,7 +67,7 @@ export function SantriPageClient() {
     const res = await deleteSantri(deleteId);
     if (res.success) {
       showToast({ title: 'Berhasil', message: 'Santri berhasil dihapus', type: 'success' });
-      fetchSantris();
+      fetchSantris(page);
     } else {
       showToast({ title: 'Gagal', message: res.error as string, type: 'error' });
     }
@@ -111,7 +116,9 @@ export function SantriPageClient() {
           <SantriTable 
             data={santris} 
             onEdit={openEdit} 
-            onDelete={(id) => setDeleteId(id)} 
+            onDelete={(id) => setDeleteId(id)}
+            meta={meta}
+            onPageChange={(p) => setPage(p)}
           />
         )}
       </div>

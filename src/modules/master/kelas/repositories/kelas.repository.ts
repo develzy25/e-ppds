@@ -1,10 +1,12 @@
 import { db } from '@/db';
+import { DbClient } from '@/infrastructure/database/repositories/base.repository';
 import { masterClass, masterSchool } from '../../schemas/master.schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { CreateKelasInput, UpdateKelasInput } from '../validators/kelas.validator';
 import { KelasEntity } from '../types/kelas.type';
 
 export class KelasRepository {
+  constructor(protected readonly database: DbClient = db) {}
   async findAll(pondokId: string): Promise<KelasEntity[]> {
     const results = await db
       .select({

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PageHeader, StatisticsCard, FormDialog, ConfirmDelete, ImportExportTools } from '@/components/master';
 import { GraduationCap, Library, BookText } from 'lucide-react';
 import { SekolahTable } from './SekolahTable';
@@ -18,11 +18,7 @@ export function SekolahPageClient() {
   const [selectedSekolah, setSelectedSekolah] = useState<SekolahEntity | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchSekolahs();
-  }, []);
-
-  const fetchSekolahs = async () => {
+  const fetchSekolahs = useCallback(async () => {
     setLoading(true);
     const res = await getSekolahs();
     if (res.success) {
@@ -31,7 +27,14 @@ export function SekolahPageClient() {
       showToast({ title: 'Gagal memuat data', message: res.error as string, type: 'error' });
     }
     setLoading(false);
-  };
+   
+  }, []);
+
+  useEffect(() => {
+    fetchSekolahs();
+  }, [fetchSekolahs]);
+
+
 
   const handleFormSubmit = async (formData: FormData) => {
     const isEdit = !!selectedSekolah;

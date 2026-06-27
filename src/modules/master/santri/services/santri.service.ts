@@ -1,106 +1,117 @@
-import { BaseService } from '@/lib/services/base.service';
-import { SantriRepository } from '../repositories/santri.repository';
+import { AuditService } from '@/infrastructure/logger/audit/audit.service';
+import { AuditRepository } from '@/infrastructure/logger/audit/audit.repository';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { CreateSantriInput, UpdateSantriInput } from '../validators/santri.validator';
-import { generateId } from '@/lib/utils';
+import { generateId } from '@/shared/utils';
 
-export class SantriService extends BaseService {
-  private repository: SantriRepository;
+export class SantriService {
+  constructor(private readonly uow: UnitOfWork) {}
+  private get repository() { return this.uow.repos.santri; }
+  private get kamarRepo() { return this.uow.repos.kamar; }
+  private get kelasRepo() { return this.uow.repos.kelas; }
+  private get tahunAjaranRepo() { return this.uow.repos.tahunAjaran; }
 
-  constructor() {
-    super();
-    this.repository = new SantriRepository();
+  async getDropdownOptions(pondokId: string, userPermissions: string[]) {
+    // Permission check if needed
+    const kamars = await this.kamarRepo.findAll(pondokId);
+    const classes = await this.kelasRepo.findAll(pondokId);
+    const allAcademicYears = await this.tahunAjaranRepo.findAll(pondokId);
+    const academicYears = allAcademicYears.filter(a => a.status === 'Aktif');
+
+    return { kamars, classes, academicYears };
   }
 
-  async getAllSantris(pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.santri.view');
-    return this.repository.findAll(pondokId);
+  async getAllSantris(pondokId: string, userPermissions: string[], page: number = 1, limit: number = 20, filters?: Record<string, any>) {
+    return this.repository.findAllPaginated(pondokId, page, limit, filters);
   }
 
   async getSantriById(id: string, pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.santri.view');
     return this.repository.findById(id, pondokId);
   }
 
   async createSantri(data: CreateSantriInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.santri.create');
-
     const existingSantri = await this.repository.findByNis(data.nis, data.pondokId);
     if (existingSantri) {
       throw new Error(`NIS '${data.nis}' sudah digunakan oleh santri lain.`);
     }
 
     const id = generateId('santri');
+    // Fallback sync for name/fullName
+    const nameToSave = data.fullName || data.name || 'Santri Tanpa Nama';
+    const fullNameToSave = data.fullName || data.name || 'Santri Tanpa Nama';
+    
     const newSantri = await this.repository.create({
+      name: nameToSave,
+      fullName: fullNameToSave,
       ...data,
       id,
       createdBy: userId,
     });
 
-    await this.logAudit({
-      module: 'MASTER_SANTRI',
-      entity: 'master_santri',
-      entityId: id,
+    const auditService = new AuditService(new AuditRepository(this.uow.repos.client));
+    await auditService.writeAuditLog({
+      module: 'master',
       action: 'CREATE',
-      afterData: newSantri,
+      entityName: 'santri',
+      entityId: id,
       performedBy: userId,
+      afterData: newSantri,
     });
 
     return newSantri;
   }
 
   async updateSantri(id: string, data: UpdateSantriInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.santri.update');
-
-    const existingSantri = await this.repository.findById(id, data.pondokId);
-    if (!existingSantri) {
-      throw new Error('Santri tidak ditemukan.');
-    }
-
-    if (existingSantri.nis !== data.nis) {
-      const nisCheck = await this.repository.findByNis(data.nis, data.pondokId);
-      if (nisCheck) {
+    if (data.nis) {
+      const existingSantri = await this.repository.findByNis(data.nis, data.pondokId);
+      if (existingSantri && existingSantri.id !== id) {
         throw new Error(`NIS '${data.nis}' sudah digunakan oleh santri lain.`);
       }
     }
 
-    const updatedSantri = await this.repository.update(id, {
+    const oldSantri = await this.repository.findById(id, data.pondokId);
+    
+    // Fallback sync
+    const syncData: any = {};
+    if (data.fullName || data.name) {
+      syncData.name = data.fullName || data.name;
+      syncData.fullName = data.fullName || data.name;
+    }
+    
+    const updatedSantri = await this.repository.update(id, data.pondokId, {
       ...data,
+      ...syncData,
       updatedBy: userId,
     });
 
-    await this.logAudit({
-      module: 'MASTER_SANTRI',
-      entity: 'master_santri',
-      entityId: id,
+    const auditService = new AuditService(new AuditRepository(this.uow.repos.client));
+    await auditService.writeAuditLog({
+      module: 'master',
       action: 'UPDATE',
-      beforeData: existingSantri,
-      afterData: updatedSantri,
+      entityName: 'santri',
+      entityId: id,
       performedBy: userId,
+      beforeData: oldSantri,
+      afterData: updatedSantri,
     });
 
     return updatedSantri;
   }
 
   async deleteSantri(id: string, pondokId: string, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.santri.delete');
+    const santri = await this.repository.findById(id, pondokId);
+    await this.repository.softDelete(id, pondokId, userId);
 
-    const existingSantri = await this.repository.findById(id, pondokId);
-    if (!existingSantri) {
-      throw new Error('Santri tidak ditemukan.');
-    }
-
-    const deletedSantri = await this.repository.softDelete(id, pondokId, userId);
-
-    await this.logAudit({
-      module: 'MASTER_SANTRI',
-      entity: 'master_santri',
-      entityId: id,
+    const auditService = new AuditService(new AuditRepository(this.uow.repos.client));
+    await auditService.writeAuditLog({
+      module: 'master',
       action: 'DELETE',
-      beforeData: existingSantri,
-      afterData: { deletedAt: deletedSantri.deletedAt, deletedBy: userId },
+      entityName: 'santri',
+      entityId: id,
       performedBy: userId,
+      beforeData: santri,
     });
 
-    return deletedSantri;
+    return true;
   }
 }

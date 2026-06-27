@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PageHeader, StatisticsCard, FormDialog, ConfirmDelete, ImportExportTools } from '@/components/master';
 import { CalendarRange, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { PeriodeTable } from './PeriodeTable';
@@ -18,11 +18,7 @@ export function PeriodePageClient() {
   const [selectedPeriode, setSelectedPeriode] = useState<PeriodeEntity | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchPeriodes();
-  }, []);
-
-  const fetchPeriodes = async () => {
+  const fetchPeriodes = useCallback(async () => {
     setLoading(true);
     const res = await getPeriodes();
     if (res.success) {
@@ -31,7 +27,14 @@ export function PeriodePageClient() {
       showToast({ title: 'Gagal memuat data', message: res.error as string, type: 'error' });
     }
     setLoading(false);
-  };
+   
+  }, []);
+
+  useEffect(() => {
+    fetchPeriodes();
+  }, [fetchPeriodes]);
+
+
 
   const handleFormSubmit = async (formData: FormData) => {
     const isEdit = !!selectedPeriode;

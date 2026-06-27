@@ -1,32 +1,30 @@
-import { BaseService } from '@/lib/services/base.service';
+import { AuditService } from '@/infrastructure/logger/audit/audit.service';
+import { AuditRepository } from '@/infrastructure/logger/audit/audit.repository';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { DepartmentRepository } from '../repositories/department.repository';
 import { CreateDepartmentInput, UpdateDepartmentInput } from '../validators/department.validator';
-import { generateId } from '@/lib/utils';
+import { generateId } from '@/shared/utils';
+import { ConflictError, NotFoundError } from '@/lib/errors';
+import { masterPosition } from '../../schemas/master.schema';
+import { eq, and, isNull } from 'drizzle-orm';
 
-export class DepartmentService extends BaseService {
-  private repository: DepartmentRepository;
-
-  constructor() {
-    super();
-    this.repository = new DepartmentRepository();
-  }
+export class DepartmentService {
+  constructor(private readonly uow: UnitOfWork) {}
+  private get repository() { return this.uow.repos.department; }
 
   async getAllDepartments(pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.department.view');
     return this.repository.findAll(pondokId);
   }
 
   async getDepartmentById(id: string, pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.department.view');
     return this.repository.findById(id, pondokId);
   }
 
   async createDepartment(data: CreateDepartmentInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.department.create');
 
     const existingDepartment = await this.repository.findByName(data.name, data.pondokId);
     if (existingDepartment) {
-      throw new Error(`Department dengan nama '${data.name}' sudah ada.`);
+      throw new ConflictError(`Department dengan nama '${data.name}' sudah ada.`);
     }
 
     const id = generateId('dept');
@@ -36,9 +34,9 @@ export class DepartmentService extends BaseService {
       createdBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_DEPARTMENT',
-      entity: 'master_department',
+      entityName: 'master_department',
       entityId: id,
       action: 'CREATE',
       afterData: newDepartment,
@@ -49,17 +47,16 @@ export class DepartmentService extends BaseService {
   }
 
   async updateDepartment(id: string, data: UpdateDepartmentInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.department.update');
 
     const existingDepartment = await this.repository.findById(id, data.pondokId);
     if (!existingDepartment) {
-      throw new Error('Department tidak ditemukan.');
+      throw new NotFoundError('Department tidak ditemukan.');
     }
 
     if (existingDepartment.name !== data.name) {
       const nameCheck = await this.repository.findByName(data.name, data.pondokId);
       if (nameCheck) {
-        throw new Error(`Department dengan nama '${data.name}' sudah ada.`);
+        throw new ConflictError(`Department dengan nama '${data.name}' sudah ada.`);
       }
     }
 
@@ -68,9 +65,9 @@ export class DepartmentService extends BaseService {
       updatedBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_DEPARTMENT',
-      entity: 'master_department',
+      entityName: 'master_department',
       entityId: id,
       action: 'UPDATE',
       beforeData: existingDepartment,
@@ -82,21 +79,36 @@ export class DepartmentService extends BaseService {
   }
 
   async deleteDepartment(id: string, pondokId: string, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.department.delete');
 
     const existingDepartment = await this.repository.findById(id, pondokId);
     if (!existingDepartment) {
-      throw new Error('Department tidak ditemukan.');
+      throw new NotFoundError('Department tidak ditemukan.');
     }
 
-    // TODO: Cek apakah department sedang digunakan oleh jabatan
-    // Jika digunakan, lempar Error
+    const positionExists = await this.uow.repos.client
+      .select({ id: masterPosition.id })
+      .from(masterPosition)
+      .where(and(eq(masterPosition.departmentId, id), isNull(masterPosition.deletedAt)))
+      .limit(1);
+
+    if (positionExists.length > 0) {
+      await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
+        module: 'MASTER_DEPARTMENT',
+        entityName: 'master_department',
+        entityId: id,
+        action: 'DELETE_FAILED',
+        beforeData: existingDepartment,
+        afterData: { reason: 'Data masih digunakan oleh entitas Jabatan' },
+        performedBy: userId,
+      });
+      throw new ConflictError('Department tidak dapat dihapus karena masih digunakan oleh data Jabatan.');
+    }
 
     const deletedDepartment = await this.repository.softDelete(id, pondokId, userId);
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_DEPARTMENT',
-      entity: 'master_department',
+      entityName: 'master_department',
       entityId: id,
       action: 'DELETE',
       beforeData: existingDepartment,

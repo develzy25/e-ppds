@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { UserProfile, mockUsers } from '@/config/mock-data';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -9,8 +9,11 @@ import {
   AlertOctagon, 
   Info, 
   HelpCircle, 
-  X
+  X,
+  Lock,
+  Delete
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export interface AppNotification {
   id: string;
@@ -55,13 +58,14 @@ interface AppContextType {
   markAllAsRead: () => void;
   isSidebarOpen: boolean;
   setSidebarOpen: (isOpen: boolean) => void;
-  theme: 'light' | 'dark';
-  toggleTheme: () => void;
   soundEnabled: boolean;
   setSoundEnabled: (enabled: boolean) => void;
   showToast: (options: ToastOptions) => void;
   showPopup: (options: PopupOptions) => void;
   showConfirm: (options: ConfirmOptions) => void;
+  isLoadingUser: boolean;
+  sessionExpired: boolean;
+  logout: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -168,10 +172,21 @@ const generateUniqueId = (prefix: string) => {
   return `${prefix}-${idCounter}`;
 };
 
-export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<UserProfile>(mockUsers[1]); // Default: M. Lulu (Sekretaris Umum & Ketua Blok)
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+export function AppProvider({ children, initialSidebarOpen = true }: { children: React.ReactNode, initialSidebarOpen?: boolean }) {
+  const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<UserProfile>(mockUsers[1]);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const [isIdle, setIsIdle] = useState(false);
+  const [reauthPin, setReauthPin] = useState('');
+  const [reauthError, setReauthError] = useState('');
+  const [isReauthing, setIsReauthing] = useState(false);
+
+  const [isSidebarOpen, _setSidebarOpen] = useState(initialSidebarOpen);
+  const setSidebarOpen = (isOpen: boolean) => {
+    _setSidebarOpen(isOpen);
+    document.cookie = `sidebar:state=${isOpen}; path=/; max-age=31536000`;
+  };
   const [soundEnabled, setSoundEnabled] = useState(true);
   
   // Real-time Notification States
@@ -207,15 +222,131 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   ]);
 
-  // Sync theme to document class
-  useEffect(() => {
-    const root = window.document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
+  // Restore session on mount
+  const fetchMe = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.status === 401) {
+        setIsLoadingUser(false);
+        // Do not force show dialog on initial load if no cookie exists
+        return;
+      }
+      const data = await res.json();
+      if (data.success && data.data?.user) {
+        const dbUser = data.data.user;
+        const matchedMock = mockUsers.find(u => u.id === dbUser.userId || u.name.toLowerCase() === dbUser.name.toLowerCase());
+        const mappedUser: UserProfile = {
+          id: dbUser.userId,
+          name: dbUser.name,
+          avatar: matchedMock?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+          primaryRole: dbUser.roles[0] || 'pengurus',
+          additionalRoles: dbUser.roles.slice(1) || [],
+          blokId: matchedMock?.blokId,
+          permissions: dbUser.permissions || [],
+          taskAssignments: matchedMock?.taskAssignments || [],
+        };
+        setCurrentUser(mappedUser);
+        setSessionExpired(false);
+      }
+    } catch (err) {
+      console.error('Failed to fetch user session:', err);
+    } finally {
+      setIsLoadingUser(false);
     }
-  }, [theme]);
+  }, []);
+
+  useEffect(() => {
+    fetchMe();
+  }, [fetchMe]);
+
+  // Session re-authentication
+  const handleReauthSubmit = async (pinValue: string) => {
+    setIsReauthing(true);
+    setReauthError('');
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pinValue }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchMe();
+        setReauthPin('');
+        setSessionExpired(false);
+        setIsIdle(false);
+        showToast({
+          title: 'Sesi Dipulihkan',
+          message: 'Sesi Anda berhasil diperpanjang.',
+          type: 'success'
+        });
+      } else {
+        setReauthError(data.error?.message || 'PIN tidak valid.');
+        setReauthPin('');
+      }
+    } catch (e) {
+      setReauthError('Koneksi gagal. Coba lagi.');
+      setReauthPin('');
+    } finally {
+      setIsReauthing(false);
+    }
+  };
+
+  // Idle Timer (15 minutes)
+  useEffect(() => {
+    if (sessionExpired) return;
+
+    let timeoutId: NodeJS.Timeout;
+
+    const resetIdleTimer = () => {
+      clearTimeout(timeoutId);
+      // 15 minutes = 15 * 60 * 1000
+      timeoutId = setTimeout(() => {
+        setIsIdle(true);
+        setSessionExpired(true);
+      }, 15 * 60 * 1000);
+    };
+
+    window.addEventListener('mousemove', resetIdleTimer);
+    window.addEventListener('keydown', resetIdleTimer);
+    window.addEventListener('click', resetIdleTimer);
+    window.addEventListener('scroll', resetIdleTimer);
+
+    resetIdleTimer();
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('mousemove', resetIdleTimer);
+      window.removeEventListener('keydown', resetIdleTimer);
+      window.removeEventListener('click', resetIdleTimer);
+      window.removeEventListener('scroll', resetIdleTimer);
+    };
+  }, [sessionExpired]);
+
+  // Multi-tab logout sync
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'logout-event') {
+        router.push('/login');
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [router]);
+
+  // Real logout implementation
+  const logout = async () => {
+    try {
+      const res = await fetch('/api/auth/logout', { method: 'POST' });
+      if (res.ok) {
+        localStorage.setItem('logout-event', Date.now().toString());
+        router.push('/login');
+      }
+    } catch (e) {
+      console.error('Logout failed:', e);
+      router.push('/login');
+    }
+  };
 
   const changeUser = (userId: string) => {
     const foundUser = mockUsers.find(u => u.id === userId);
@@ -262,10 +393,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const markAllAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-  };
-
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
   };
 
   // Triggers Toast
@@ -315,13 +442,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         markAllAsRead,
         isSidebarOpen,
         setSidebarOpen,
-        theme,
-        toggleTheme,
         soundEnabled,
         setSoundEnabled,
         showToast,
         showPopup,
-        showConfirm
+        showConfirm,
+        isLoadingUser,
+        sessionExpired,
+        logout
       }}
     >
       {children}
@@ -475,6 +603,105 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                   {confirm.confirmLabel || 'Lanjutkan'}
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Session Expired / Lock Re-authentication Modal */}
+      <AnimatePresence>
+        {sessionExpired && (
+          <div className="fixed inset-0 flex items-center justify-center z-99999 pointer-events-auto">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-xl"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative overflow-hidden flex flex-col items-center p-8 text-center max-w-sm w-full mx-4 rounded-3xl border border-white/20 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/75 backdrop-blur-3xl shadow-2xl"
+            >
+              <div className="relative flex items-center justify-center h-16 w-16 rounded-2xl border bg-linear-to-br from-amber-400 via-amber-500 to-orange-600 border-amber-300/30 shadow-lg mb-4">
+                <Lock className="h-8 w-8 text-white animate-pulse" />
+              </div>
+
+              <h4 className="text-base font-black tracking-wider uppercase text-foreground mb-1">
+                {isIdle ? 'Sesi Terkunci' : 'Sesi Habis'}
+              </h4>
+              <p className="text-xs text-muted-foreground font-medium mb-6">
+                {isIdle 
+                  ? 'Anda sudah tidak aktif selama 15 menit. Masukkan PIN untuk membuka.' 
+                  : 'Sesi Anda telah kedaluwarsa. Silakan masukkan PIN untuk melanjutkan.'}
+              </p>
+
+              {reauthError && (
+                <div className="w-full p-2 mb-4 text-xs font-bold text-rose-500 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                  {reauthError}
+                </div>
+              )}
+
+              <input
+                type="password"
+                maxLength={6}
+                value={reauthPin}
+                readOnly
+                placeholder="••••••"
+                className="w-full text-center tracking-[0.75em] font-black text-2xl py-3 rounded-2xl border border-border bg-secondary/20 focus:outline-none mb-6 text-foreground"
+              />
+
+              {/* Pad Keypad Mini */}
+              <div className="grid grid-cols-3 gap-2.5 max-w-[200px] mx-auto mb-6">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => {
+                      if (reauthPin.length < 6) {
+                        const next = reauthPin + num;
+                        setReauthPin(next);
+                        if (next.length === 6) handleReauthSubmit(next);
+                      }
+                    }}
+                    className="h-10 w-10 rounded-full flex items-center justify-center text-xs font-black border border-border/10 bg-secondary/20 hover:bg-secondary/40 active:scale-90 transition-all cursor-pointer text-foreground"
+                  >
+                    {num}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setReauthPin('')}
+                  className="h-10 w-10 rounded-full flex items-center justify-center text-[8px] font-black uppercase text-muted-foreground hover:bg-secondary/30 cursor-pointer"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={() => {
+                    if (reauthPin.length < 6) {
+                      const next = reauthPin + '0';
+                      setReauthPin(next);
+                      if (next.length === 6) handleReauthSubmit(next);
+                    }
+                  }}
+                  className="h-10 w-10 rounded-full flex items-center justify-center text-xs font-black border border-border/10 bg-secondary/20 hover:bg-secondary/40 active:scale-90 transition-all cursor-pointer text-foreground"
+                >
+                  0
+                </button>
+                <button
+                  onClick={() => setReauthPin(prev => prev.slice(0, -1))}
+                  className="h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:bg-secondary/30 cursor-pointer"
+                >
+                  <Delete className="h-4 w-4" />
+                </button>
+              </div>
+
+              <button
+                onClick={logout}
+                className="w-full py-2.5 rounded-xl text-xs font-bold border border-border/60 hover:bg-secondary/35 text-foreground transition-all cursor-pointer"
+              >
+                Keluar Aplikasi
+              </button>
             </motion.div>
           </div>
         )}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PageHeader, StatisticsCard, FormDialog, ConfirmDelete, ImportExportTools } from '@/components/master';
 import { Presentation, School, Users2 } from 'lucide-react';
 import { KelasTable } from './KelasTable';
@@ -18,11 +18,7 @@ export function KelasPageClient() {
   const [selectedKelas, setSelectedKelas] = useState<KelasEntity | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchKelass();
-  }, []);
-
-  const fetchKelass = async () => {
+  const fetchKelass = useCallback(async () => {
     setLoading(true);
     const res = await getKelass();
     if (res.success) {
@@ -31,7 +27,14 @@ export function KelasPageClient() {
       showToast({ title: 'Gagal memuat data', message: res.error as string, type: 'error' });
     }
     setLoading(false);
-  };
+   
+  }, []);
+
+  useEffect(() => {
+    fetchKelass();
+  }, [fetchKelass]);
+
+
 
   const handleFormSubmit = async (formData: FormData) => {
     const isEdit = !!selectedKelas;

@@ -1,18 +1,23 @@
 'use server';
 
+import { getCurrentUser as getRealUser } from '@/lib/services/auth';
 import { revalidatePath } from 'next/cache';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { RoleService } from '../services/role.service';
 import { createRoleSchema, updateRoleSchema } from '../validators/role.validator';
+import { errorResponse, successResponse } from '@/shared/utils/action-error';
 
-const roleService = new RoleService();
+const roleService = new RoleService(new UnitOfWork());
 
-// Mock function to get current user context
-// In real app, this comes from next-auth session or JWT middleware
 async function getCurrentUser() {
+  const user = await getRealUser();
+  if (!user) {
+    throw new Error('Unauthorized: Sesi tidak ditemukan atau kedaluwarsa');
+  }
   return {
-    id: 'u1',
-    pondokId: 'pondok-1',
-    permissions: ['master.role.view', 'master.role.create', 'master.role.update', 'master.role.delete'], // Super Admin Mock
+    id: user.userId,
+    pondokId: user.pondokId,
+    permissions: user.permissions,
   };
 }
 
@@ -20,9 +25,9 @@ export async function getRoles() {
   try {
     const user = await getCurrentUser();
     const roles = await roleService.getAllRoles(user.pondokId, user.permissions);
-    return { success: true, data: roles };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(roles);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -30,9 +35,9 @@ export async function getRole(id: string) {
   try {
     const user = await getCurrentUser();
     const role = await roleService.getRoleById(id, user.pondokId, user.permissions);
-    return { success: true, data: role };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(role);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -50,9 +55,9 @@ export async function createRole(formData: FormData) {
     const newRole = await roleService.createRole(validatedData, user.id, user.permissions);
     
     revalidatePath('/master/role');
-    return { success: true, data: newRole };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(newRole);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -72,9 +77,9 @@ export async function updateRole(formData: FormData) {
     const updatedRole = await roleService.updateRole(id, validatedData, user.id, user.permissions);
     
     revalidatePath('/master/role');
-    return { success: true, data: updatedRole };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(updatedRole);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -84,8 +89,8 @@ export async function deleteRole(id: string) {
     const deletedRole = await roleService.deleteRole(id, user.pondokId, user.id, user.permissions);
     
     revalidatePath('/master/role');
-    return { success: true, data: deletedRole };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(deletedRole);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }

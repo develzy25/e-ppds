@@ -1,51 +1,43 @@
 'use server';
 
+import { getCurrentUser as getRealUser } from '@/lib/services/auth';
 import { revalidatePath } from 'next/cache';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { SantriService } from '../services/santri.service';
 import { createSantriSchema, updateSantriSchema } from '../validators/santri.validator';
-import { db } from '@/db';
-import { masterRoom, masterClass, masterAcademicYear } from '../../schemas/master.schema';
-import { eq, and, isNull } from 'drizzle-orm';
+import { errorResponse, successResponse } from '@/shared/utils/action-error';
 
-const santriService = new SantriService();
+const santriService = new SantriService(new UnitOfWork());
 
-// Mock function to get current user context
 async function getCurrentUser() {
+  const user = await getRealUser();
+  if (!user) {
+    throw new Error('Unauthorized: Sesi tidak ditemukan atau kedaluwarsa');
+  }
   return {
-    id: 'u1',
-    pondokId: 'pondok-1',
-    permissions: ['master.santri.view', 'master.santri.create', 'master.santri.update', 'master.santri.delete'],
+    id: user.userId,
+    pondokId: user.pondokId,
+    permissions: user.permissions,
   };
 }
 
-export async function getSantris() {
+export async function getSantris(page: number = 1, limit: number = 20, filters?: Record<string, string>) {
   try {
     const user = await getCurrentUser();
-    const santris = await santriService.getAllSantris(user.pondokId, user.permissions);
-    return { success: true, data: santris };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    const result = await santriService.getAllSantris(user.pondokId, user.permissions, page, limit, filters);
+    return successResponse(result.data, result.meta);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
 export async function getSantriDropdownOptions() {
   try {
     const user = await getCurrentUser();
-    
-    const kamars = await db.select().from(masterRoom).where(and(eq(masterRoom.pondokId, user.pondokId), isNull(masterRoom.deletedAt)));
-    const classes = await db.select().from(masterClass).where(and(eq(masterClass.pondokId, user.pondokId), isNull(masterClass.deletedAt)));
-    const academicYears = await db.select().from(masterAcademicYear).where(and(eq(masterAcademicYear.pondokId, user.pondokId), isNull(masterAcademicYear.deletedAt), eq(masterAcademicYear.status, 'Aktif')));
-
-    return { 
-      success: true, 
-      data: {
-        kamars,
-        classes,
-        academicYears
-      } 
-    };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    const options = await santriService.getDropdownOptions(user.pondokId, user.permissions);
+    return successResponse(options);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -66,9 +58,9 @@ export async function createSantri(formData: FormData) {
     const newSantri = await santriService.createSantri(validatedData, user.id, user.permissions);
     
     revalidatePath('/master/santri');
-    return { success: true, data: newSantri };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(newSantri);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -89,9 +81,9 @@ export async function updateSantri(formData: FormData) {
     const updatedSantri = await santriService.updateSantri(validatedData.id, validatedData, user.id, user.permissions);
     
     revalidatePath('/master/santri');
-    return { success: true, data: updatedSantri };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(updatedSantri);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -101,8 +93,8 @@ export async function deleteSantri(id: string) {
     const deletedSantri = await santriService.deleteSantri(id, user.pondokId, user.id, user.permissions);
     
     revalidatePath('/master/santri');
-    return { success: true, data: deletedSantri };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(deletedSantri);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }

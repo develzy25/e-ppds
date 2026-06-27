@@ -1,32 +1,30 @@
-import { BaseService } from '@/lib/services/base.service';
+import { AuditService } from '@/infrastructure/logger/audit/audit.service';
+import { AuditRepository } from '@/infrastructure/logger/audit/audit.repository';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { JabatanRepository } from '../repositories/jabatan.repository';
 import { CreateJabatanInput, UpdateJabatanInput } from '../validators/jabatan.validator';
-import { generateId } from '@/lib/utils';
+import { generateId } from '@/shared/utils';
+import { ConflictError, NotFoundError } from '@/lib/errors';
+import { pengurusPositions, masterPengurus } from '../../schemas/master.schema';
+import { eq, and, isNull } from 'drizzle-orm';
 
-export class JabatanService extends BaseService {
-  private repository: JabatanRepository;
-
-  constructor() {
-    super();
-    this.repository = new JabatanRepository();
-  }
+export class JabatanService {
+  constructor(private readonly uow: UnitOfWork) {}
+  private get repository() { return this.uow.repos.jabatan; }
 
   async getAllJabatans(pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.jabatan.view');
     return this.repository.findAll(pondokId);
   }
 
   async getJabatanById(id: string, pondokId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.jabatan.view');
     return this.repository.findById(id, pondokId);
   }
 
   async createJabatan(data: CreateJabatanInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.jabatan.create');
 
     const existingJabatan = await this.repository.findByNameAndDepartment(data.name, data.departmentId, data.pondokId);
     if (existingJabatan) {
-      throw new Error(`Jabatan dengan nama '${data.name}' sudah ada di department ini.`);
+      throw new ConflictError(`Jabatan dengan nama '${data.name}' sudah ada di department ini.`);
     }
 
     const id = generateId('jabatan');
@@ -36,9 +34,9 @@ export class JabatanService extends BaseService {
       createdBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_JABATAN',
-      entity: 'master_position',
+      entityName: 'master_position',
       entityId: id,
       action: 'CREATE',
       afterData: newJabatan,
@@ -49,17 +47,16 @@ export class JabatanService extends BaseService {
   }
 
   async updateJabatan(id: string, data: UpdateJabatanInput, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.jabatan.update');
 
     const existingJabatan = await this.repository.findById(id, data.pondokId);
     if (!existingJabatan) {
-      throw new Error('Jabatan tidak ditemukan.');
+      throw new NotFoundError('Jabatan tidak ditemukan.');
     }
 
     if (existingJabatan.name !== data.name || existingJabatan.departmentId !== data.departmentId) {
       const nameCheck = await this.repository.findByNameAndDepartment(data.name, data.departmentId, data.pondokId);
       if (nameCheck) {
-        throw new Error(`Jabatan dengan nama '${data.name}' sudah ada di department ini.`);
+        throw new ConflictError(`Jabatan dengan nama '${data.name}' sudah ada di department ini.`);
       }
     }
 
@@ -68,9 +65,9 @@ export class JabatanService extends BaseService {
       updatedBy: userId,
     });
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_JABATAN',
-      entity: 'master_position',
+      entityName: 'master_position',
       entityId: id,
       action: 'UPDATE',
       beforeData: existingJabatan,
@@ -82,21 +79,37 @@ export class JabatanService extends BaseService {
   }
 
   async deleteJabatan(id: string, pondokId: string, userId: string, userPermissions: string[]) {
-    this.requirePermission(userPermissions, 'master.jabatan.delete');
 
     const existingJabatan = await this.repository.findById(id, pondokId);
     if (!existingJabatan) {
-      throw new Error('Jabatan tidak ditemukan.');
+      throw new NotFoundError('Jabatan tidak ditemukan.');
     }
 
-    // TODO: Cek apakah jabatan sedang digunakan oleh pengurus
-    // Jika digunakan, lempar Error
+    const jabatanExists = await this.uow.repos.client
+      .select({ id: pengurusPositions.id })
+      .from(pengurusPositions)
+      .innerJoin(masterPengurus, eq(pengurusPositions.pengurusId, masterPengurus.id))
+      .where(and(eq(pengurusPositions.positionId, id), isNull(masterPengurus.deletedAt)))
+      .limit(1);
+
+    if (jabatanExists.length > 0) {
+      await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
+        module: 'MASTER_JABATAN',
+        entityName: 'master_position',
+        entityId: id,
+        action: 'DELETE_FAILED',
+        beforeData: existingJabatan,
+        afterData: { reason: 'Data masih digunakan oleh entitas Pengurus' },
+        performedBy: userId,
+      });
+      throw new ConflictError('Jabatan tidak dapat dihapus karena masih digunakan oleh data Pengurus.');
+    }
 
     const deletedJabatan = await this.repository.softDelete(id, pondokId, userId);
 
-    await this.logAudit({
+    await new AuditService(new AuditRepository(this.uow.repos.client)).writeAuditLog({
       module: 'MASTER_JABATAN',
-      entity: 'master_position',
+      entityName: 'master_position',
       entityId: id,
       action: 'DELETE',
       beforeData: existingJabatan,

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PageHeader, StatisticsCard, FormDialog, ConfirmDelete, ImportExportTools } from '@/components/master';
 import { UserCog, Users, UserCheck } from 'lucide-react';
 import { PengurusTable } from './PengurusTable';
@@ -18,11 +18,7 @@ export function PengurusPageClient() {
   const [selectedPengurus, setSelectedPengurus] = useState<PengurusEntity | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchPenguruss();
-  }, []);
-
-  const fetchPenguruss = async () => {
+  const fetchPenguruss = useCallback(async () => {
     setLoading(true);
     const res = await getPenguruss();
     if (res.success) {
@@ -31,7 +27,14 @@ export function PengurusPageClient() {
       showToast({ title: 'Gagal memuat data', message: res.error as string, type: 'error' });
     }
     setLoading(false);
-  };
+   
+  }, []);
+
+  useEffect(() => {
+    fetchPenguruss();
+  }, [fetchPenguruss]);
+
+
 
   const handleFormSubmit = async (formData: FormData) => {
     const isEdit = !!selectedPengurus;

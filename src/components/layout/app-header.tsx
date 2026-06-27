@@ -6,6 +6,7 @@ import { useApp } from '@/context/AppContext';
 import { mockUsers } from '@/config/mock-data';
 import { Breadcrumb } from './breadcrumb';
 import { QuickAction } from './quick-action';
+import { ThemeSwitcher } from './theme-switcher';
 
 export function AppHeader() {
   const {
@@ -16,8 +17,7 @@ export function AppHeader() {
     markAllAsRead,
     isSidebarOpen,
     setSidebarOpen,
-    theme,
-    toggleTheme,
+    logout
   } = useApp();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -91,17 +91,8 @@ export function AppHeader() {
         {/* Quick Actions */}
         <QuickAction />
 
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          title="Ganti Tema"
-          className="flex h-8 w-8 items-center justify-center rounded-xl border border-border/50 hover:bg-secondary/70 text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-95"
-        >
-          {theme === 'dark'
-            ? <Sun className="h-4 w-4 text-amber-400" />
-            : <Moon className="h-4 w-4" />
-          }
-        </button>
+        {/* Theme Switcher */}
+        <ThemeSwitcher />
 
         {/* Notification Bell */}
         <div className="relative">
@@ -259,11 +250,11 @@ export function AppHeader() {
                 <div className="h-px bg-border/40 my-1" />
 
                 <button
-                  onClick={() => {
-                    alert('Logout dinonaktifkan di versi simulasi frontend.');
+                  onClick={async () => {
                     setIsProfileOpen(false);
+                    await logout();
                   }}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors"
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                 >
                   <LogOut className="h-3.5 w-3.5" />
                   <span>Log Out</span>

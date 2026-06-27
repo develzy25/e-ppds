@@ -1,17 +1,23 @@
 'use server';
 
+import { getCurrentUser as getRealUser } from '@/lib/services/auth';
 import { revalidatePath } from 'next/cache';
+import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { TahunAjaranService } from '../services/tahun-ajaran.service';
 import { createTahunAjaranSchema, updateTahunAjaranSchema } from '../validators/tahun-ajaran.validator';
+import { errorResponse, successResponse } from '@/shared/utils/action-error';
 
-const tahunAjaranService = new TahunAjaranService();
+const tahunAjaranService = new TahunAjaranService(new UnitOfWork());
 
-// Mock function to get current user context
 async function getCurrentUser() {
+  const user = await getRealUser();
+  if (!user) {
+    throw new Error('Unauthorized: Sesi tidak ditemukan atau kedaluwarsa');
+  }
   return {
-    id: 'u1',
-    pondokId: 'pondok-1',
-    permissions: ['master.tahun_ajaran.view', 'master.tahun_ajaran.create', 'master.tahun_ajaran.update', 'master.tahun_ajaran.delete'],
+    id: user.userId,
+    pondokId: user.pondokId,
+    permissions: user.permissions,
   };
 }
 
@@ -19,9 +25,9 @@ export async function getTahunAjarans() {
   try {
     const user = await getCurrentUser();
     const periodes = await tahunAjaranService.getAllTahunAjarans(user.pondokId, user.permissions);
-    return { success: true, data: periodes };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(periodes);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -29,9 +35,9 @@ export async function getTahunAjaran(id: string) {
   try {
     const user = await getCurrentUser();
     const periode = await tahunAjaranService.getTahunAjaranById(id, user.pondokId, user.permissions);
-    return { success: true, data: periode };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(periode);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -49,9 +55,9 @@ export async function createTahunAjaran(formData: FormData) {
     const newTahunAjaran = await tahunAjaranService.createTahunAjaran(validatedData, user.id, user.permissions);
     
     revalidatePath('/master/tahun-ajaran');
-    return { success: true, data: newTahunAjaran };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(newTahunAjaran);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -71,9 +77,9 @@ export async function updateTahunAjaran(formData: FormData) {
     const updatedTahunAjaran = await tahunAjaranService.updateTahunAjaran(id, validatedData, user.id, user.permissions);
     
     revalidatePath('/master/tahun-ajaran');
-    return { success: true, data: updatedTahunAjaran };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(updatedTahunAjaran);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }
 
@@ -83,8 +89,8 @@ export async function deleteTahunAjaran(id: string) {
     const deletedTahunAjaran = await tahunAjaranService.deleteTahunAjaran(id, user.pondokId, user.id, user.permissions);
     
     revalidatePath('/master/tahun-ajaran');
-    return { success: true, data: deletedTahunAjaran };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return successResponse(deletedTahunAjaran);
+  } catch (error: unknown) {
+    return errorResponse(error);
   }
 }

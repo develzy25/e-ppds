@@ -1,8 +1,12 @@
+import { cookies } from 'next/headers';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppProvider } from "@/context/AppContext";
 import { AppShell } from "@/components/layout/app-shell";
+import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { PrintProvider } from "@/components/print/print-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,19 +24,33 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const sidebarState = cookieStore.get('sidebar:state')?.value;
+  const initialSidebarOpen = sidebarState ? sidebarState === 'true' : true;
+
   return (
-    <html lang="id" className="h-full">
-      <body className={`${geistSans.variable} ${geistMono.variable} h-full antialiased bg-background text-foreground`}>
-        <AppProvider>
-          <AppShell>
-            {children}
-          </AppShell>
-        </AppProvider>
+    <html lang="id" className="h-full" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} h-full antialiased bg-background text-foreground transition-colors duration-300`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="ivory"
+          enableSystem={false}
+          themes={['ivory', 'deep-space', 'emerald', 'ocean', 'corporate', 'pondok-classic']}
+        >
+          <PrintProvider>
+            <AppProvider initialSidebarOpen={initialSidebarOpen}>
+              <AppShell>
+                {children}
+              </AppShell>
+              <Toaster />
+            </AppProvider>
+          </PrintProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
