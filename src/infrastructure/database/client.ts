@@ -1,4 +1,4 @@
-import { SQLiteProvider } from './providers/sqlite.provider';
+import { MemoryProvider } from './providers/memory.provider';
 import { D1Provider } from './providers/d1.provider';
 import { PostgresProvider } from './providers/postgres.provider';
 
@@ -7,20 +7,20 @@ export class DatabaseClient {
 
   static getInstance(): any {
     if (!this.instance) {
-      const providerType = process.env.DATABASE_PROVIDER || 'sqlite';
+      const providerType = process.env.DATABASE_PROVIDER || 'd1';
       
       console.log(`[Database Adapter] Initializing connection using ${providerType} provider...`);
 
       switch (providerType.toLowerCase()) {
-        case 'd1':
-          this.instance = new D1Provider().getDb();
+        case 'memory':
+          this.instance = new MemoryProvider().getDb();
           break;
         case 'postgres':
           this.instance = new PostgresProvider().getDb();
           break;
-        case 'sqlite':
+        case 'd1':
         default:
-          this.instance = new SQLiteProvider().getDb();
+          this.instance = new D1Provider().getDb();
           break;
       }
     }

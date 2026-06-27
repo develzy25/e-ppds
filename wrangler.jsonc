@@ -28,6 +28,37 @@
     }
   ],
 
+  // R2 Bucket Bindings
+  "r2_buckets": [
+    {
+      "binding": "STORAGE",
+      "bucket_name": "ppds-assets"
+    }
+  ],
+
+  // AI Binding
+  "ai": {
+    "binding": "AI"
+  },
+
+  // Queues Binding
+  // "queues": {
+  //   "producers": [
+  //     {
+  //       "binding": "MAIL_QUEUE",
+  //       "queue": "ppds-mail-queue"
+  //     }
+  //   ]
+  // },
+
+  // Analytics Engine
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS",
+      "dataset": "ppds_analytics"
+    }
+  ],
+
   // Environment Variables (non-secret)
   "vars": {
     "NODE_ENV": "production",
