@@ -1,3 +1,4 @@
+import { BusinessError } from '@/infrastructure/errors';
 import { IDatabaseProvider } from '../provider.interface';
 
 export class PostgresProvider implements IDatabaseProvider {
@@ -6,6 +7,6 @@ export class PostgresProvider implements IDatabaseProvider {
   }
 
   getDb() {
-    throw new Error('Postgres not yet supported in this version');
+    throw new BusinessError('BUSINESS_ERROR', 'Postgres not yet supported in this version');
   }
 }

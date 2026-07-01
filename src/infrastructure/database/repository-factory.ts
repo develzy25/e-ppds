@@ -2,18 +2,18 @@ import { db } from '@/db';
 import { DbClient } from './repositories/base.repository';
 
 // Master Repositories
-import { BlokRepository } from '@/modules/master/blok/repositories/blok.repository';
-import { DepartmentRepository } from '@/modules/master/department/repositories/department.repository';
-import { JabatanRepository } from '@/modules/master/jabatan/repositories/jabatan.repository';
-import { KamarRepository } from '@/modules/master/kamar/repositories/kamar.repository';
-import { KelasRepository } from '@/modules/master/kelas/repositories/kelas.repository';
-import { PengurusRepository } from '@/modules/master/pengurus/repositories/pengurus.repository';
-import { PeriodeRepository } from '@/modules/master/periode/repositories/periode.repository';
-import { PermissionRepository } from '@/modules/master/permission/repositories/permission.repository';
-import { RoleRepository } from '@/modules/master/role/repositories/role.repository';
-import { SantriRepository } from '@/modules/master/santri/repositories/santri.repository';
-import { SekolahRepository } from '@/modules/master/sekolah/repositories/sekolah.repository';
-import { TahunAjaranRepository } from '@/modules/master/tahun-ajaran/repositories/tahun-ajaran.repository';
+import { BlokRepository } from '@/modules/master/repositories/blok.repository';
+import { DepartmentRepository } from '@/modules/master/repositories/department.repository';
+import { JabatanRepository } from '@/modules/master/repositories/jabatan.repository';
+import { KamarRepository } from '@/modules/master/repositories/kamar.repository';
+import { KelasRepository } from '@/modules/master/repositories/kelas.repository';
+import { PengurusRepository } from '@/modules/master/repositories/pengurus.repository';
+import { PeriodeRepository } from '@/modules/master/repositories/periode.repository';
+import { PermissionRepository } from '@/modules/master/repositories/permission.repository';
+import { RoleRepository } from '@/modules/master/repositories/role.repository';
+import { SantriRepository } from '@/modules/master/repositories/santri.repository';
+import { SekolahRepository } from '@/modules/master/repositories/sekolah.repository';
+import { TahunAjaranRepository } from '@/modules/master/repositories/tahun-ajaran.repository';
 
 // Lab Repositories
 import { LabComputerRepository } from '@/modules/laboratorium/repositories/lab-computer.repository';
@@ -32,12 +32,12 @@ import { PosProductRepository } from '@/modules/pos/repositories/pos-product.rep
 import { PosStockRepository } from '@/modules/pos/repositories/pos-stock.repository';
 
 // Cash Repositories
-import { CashRepository } from '@/modules/keuangan/accounting/repositories/cash.repository';
+import { CashRepository } from '@/modules/keuangan/repositories/cash.repository';
 import { DepositRepository } from '@/modules/laboratorium/repositories/deposit.repository';
 
 // Keuangan Repositories
-import { JenisTagihanRepository } from '@/modules/keuangan/jenis-tagihan/repositories/jenis-tagihan.repository';
-import { TarifRepository } from '@/modules/keuangan/tarif/repositories/tarif.repository';
+import { JenisTagihanRepository } from '@/modules/keuangan/repositories/jenis-tagihan.repository';
+import { TarifRepository } from '@/modules/keuangan/repositories/tarif.repository';
 
 /**
  * RepositoryFactory
@@ -191,4 +191,19 @@ export class RepositoryFactory {
   // ==============================================================
   // BILLING REPOSITORIES (To Be Added in Phase 4.4)
   // ==============================================================
+
+  // ==============================================================
+  // KEAAMANAN REPOSITORIES
+  // ==============================================================
+  createKeamananPermitRepository() {
+    // Lazy loaded to avoid circular dependencies if any, but since they are small, we can import them.
+    const { KeamananPermitRepository } = require('@/modules/keamanan/repositories/keamanan.repository');
+    return new KeamananPermitRepository(this.dbClient as any);
+  }
+
+  createKeamananOffenseRepository() {
+    const { KeamananOffenseRepository } = require('@/modules/keamanan/repositories/keamanan.repository');
+    return new KeamananOffenseRepository(this.dbClient as any);
+  }
 }
+

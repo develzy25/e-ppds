@@ -10,9 +10,14 @@ export const pondoks = sqliteTable('pondoks', {
   name: text('name').notNull(),
   address: text('address'),
   phone: text('phone'),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 // =============================================================
 // 1. CORE MODUL & ENTERPRISE RBAC (Periode, User, Role, Session, Settings)
@@ -23,9 +28,14 @@ export const periodes = sqliteTable('periodes', {
   yearName: text('year_name').notNull(), // e.g. "2026-2027"
   status: text('status').notNull(), // e.g. "Aktif", "Arsip"
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -39,28 +49,42 @@ export const users = sqliteTable('users', {
   sessionVersion: integer('session_version').notNull().default(1),
   permissionVersion: integer('permission_version').notNull().default(1),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
   deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const masterRoles = sqliteTable('master_roles', {
   id: text('id').primaryKey(),
   name: text('name').unique().notNull(), // e.g., "ketua_umum", "kasie_keamanan"
   description: text('description'),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const masterPermissions = sqliteTable('master_permissions', {
   id: text('id').primaryKey(),
   name: text('name').unique().notNull(), // e.g., "izin_create", "skkb_approve"
   description: text('description'),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const userRoles = sqliteTable('user_roles', {
   id: text('id').primaryKey(),
@@ -80,14 +104,20 @@ export const userSessions = sqliteTable('user_sessions', {
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   token: text('token').unique().notNull(),
   expiresAt: text('expires_at').notNull(),
-  createdAt: text('created_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
   ipAddress: text('ip_address'),
   device: text('device'),
   browser: text('browser'),
   os: text('os'),
   userAgent: text('user_agent'),
   lastActivity: text('last_activity'),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const systemSettings = sqliteTable('system_settings', {
   id: text('id').primaryKey(),
@@ -95,15 +125,29 @@ export const systemSettings = sqliteTable('system_settings', {
   value: text('value').notNull(),
   description: text('description'),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const taskAssignments = sqliteTable('task_assignments', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   taskUnitId: text('task_unit_id').notNull(), // e.g. "petugas_registrasi"
   assignedBy: text('assigned_by').notNull().references(() => users.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  assignedAt: text('assigned_at').notNull(), // ISO Date-time
+  assignedAt: text('assigned_at').notNull(), // ISO Date-time,
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 // =============================================================
 // 10. NOTIFIKASI & FILE TERPUSAT
@@ -122,14 +166,27 @@ export const notifications = sqliteTable('notifications', {
   periodId: text('period_id').notNull().references(() => periodes.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const notificationTargets = sqliteTable('notification_targets', {
   id: text('id').primaryKey(),
   notificationId: text('notification_id').notNull().references(() => notifications.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   isRead: integer('is_read', { mode: 'boolean' }).notNull().default(false),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const files = sqliteTable('files', {
   id: text('id').primaryKey(),
@@ -139,7 +196,13 @@ export const files = sqliteTable('files', {
   uploaderId: text('uploader_id').notNull().references(() => users.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   deletedAt: text('deleted_at'),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const attachments = sqliteTable('attachments', {
   id: text('id').primaryKey(),
@@ -171,7 +234,14 @@ export const systemAuditLogs = sqliteTable('system_audit_logs', {
   sessionId: text('session_id'),
   remarks: text('remarks'),
   performedAt: integer('performed_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const backgroundJobs = sqliteTable('background_jobs', {
   id: text('id').primaryKey(),
@@ -183,7 +253,13 @@ export const backgroundJobs = sqliteTable('background_jobs', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
   startedAt: integer('started_at', { mode: 'timestamp' }),
   completedAt: integer('completed_at', { mode: 'timestamp' }),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 // =============================================================
 // 21. ENTERPRISE INFRASTRUCTURE & MUTATIONS (New Tables)
@@ -200,7 +276,14 @@ export const stockMovements = sqliteTable('stock_movements', {
   timestamp: text('timestamp').notNull(),
   periodId: text('period_id').notNull().references(() => periodes.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const documentSequences = sqliteTable('document_sequences', {
   id: text('id').primaryKey(),
@@ -210,16 +293,29 @@ export const documentSequences = sqliteTable('document_sequences', {
   suffix: text('suffix'),
   periodId: text('period_id').notNull().references(() => periodes.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const systemEvents = sqliteTable('system_events', {
   id: text('id').primaryKey(),
   eventName: text('event_name').notNull(), // e.g. "invoice_created"
   payload: text('payload').notNull(), // JSON text
   status: text('status').notNull(), // "Pending" | "Processed" | "Failed"
-  createdAt: text('created_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
   processedAt: text('processed_at'),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const backupLogs = sqliteTable('backup_logs', {
   id: text('id').primaryKey(),
@@ -228,10 +324,24 @@ export const backupLogs = sqliteTable('backup_logs', {
   fileSize: integer('file_size').notNull(), // in Bytes
   status: text('status').notNull(), // "Success" | "Failed"
   filepath: text('filepath').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const schemaMigrations = sqliteTable('schema_migrations', {
   id: text('id').primaryKey(),
   version: text('version').notNull(),
   appliedAt: text('applied_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+

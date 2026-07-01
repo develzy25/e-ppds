@@ -37,8 +37,8 @@ export const routes: RouteItem[] = [
       { id: 'master-sekolah', label: 'Sekolah', path: '/master/sekolah', permissions: ['master.sekolah.view'] },
       { id: 'master-kelas', label: 'Kelas', path: '/master/kelas', permissions: ['master.kelas.view'] },
       { id: 'master-periode', label: 'Periode', path: '/master/periode', permissions: ['master.periode.view'] },
-      { id: 'master-room', label: 'Data Kamar & Blok', path: '/master/room', permissions: ['master.room.view'] },
-      { id: 'master-academic', label: 'Tahun Ajaran', path: '/master/academic', permissions: ['master.academic_year.view'] }
+      { id: 'master-room', label: 'Data Kamar & Blok', path: '/master/kamar', permissions: ['master.room.view'] },
+      { id: 'master-academic', label: 'Tahun Ajaran', path: '/master/tahun-ajaran', permissions: ['master.academic_year.view'] }
     ]
   },
   {

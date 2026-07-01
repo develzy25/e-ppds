@@ -1,5 +1,5 @@
 import { db } from '@/db';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { dmsSurats, dmsSuratApprovals } from '../schemas/dms.schema';
 import { insertAuditLog } from '@/modules/core/services/audit.service';
 import { requirePermission } from '@/modules/core/services/rbac.service';
@@ -125,3 +125,16 @@ export async function approveSurat(approvalId: string, suratId: string, userId: 
     performedBy: userId,
   });
 }
+
+export async function getAllSurats(userPermissions: string[]) {
+  requirePermission(userPermissions, 'dms.surat.read');
+  return db.select().from(dmsSurats).orderBy(desc(dmsSurats.createdAt));
+}
+
+export async function getSuratById(id: string, userPermissions: string[]) {
+  requirePermission(userPermissions, 'dms.surat.read');
+  const result = await db.select().from(dmsSurats).where(eq(dmsSurats.id, id)).limit(1);
+  return result[0] || null;
+}
+
+

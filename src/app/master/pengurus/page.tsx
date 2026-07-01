@@ -1,4 +1,4 @@
-import { PengurusPageClient } from '@/modules/master/pengurus/components/PengurusPageClient';
+import { PengurusPageClient } from '@/modules/master/components/PengurusPageClient';
 
 export const metadata = {
   title: 'Master Pengurus - PPDS ERP',

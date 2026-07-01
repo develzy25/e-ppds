@@ -10,8 +10,8 @@ export const masterAcademicYear = sqliteTable('master_academic_year', {
   name: text('name').notNull(), // e.g. "2026/2027"
   status: text('status').notNull(), // "Aktif" | "Tidak Aktif"
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
   deletedAt: text('deleted_at'),
   createdBy: text('created_by'),
   updatedBy: text('updated_by'),
@@ -23,8 +23,8 @@ export const masterPeriod = sqliteTable('master_period', {
   name: text('name').notNull(), // e.g. "Periode Kepengurusan 2026-2029"
   status: text('status').notNull(),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
   deletedAt: text('deleted_at'),
   createdBy: text('created_by'),
   updatedBy: text('updated_by'),
@@ -39,8 +39,8 @@ export const masterRole = sqliteTable('master_role', {
   name: text('name').unique().notNull(), // e.g. "SUPER_ADMIN", "BENDAHARA"
   description: text('description'),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
   deletedAt: text('deleted_at'),
   createdBy: text('created_by'),
   updatedBy: text('updated_by'),
@@ -52,8 +52,8 @@ export const masterPermission = sqliteTable('master_permission', {
   name: text('name').unique().notNull(), // e.g. "keuangan.tagihan.view"
   description: text('description'),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
   deletedAt: text('deleted_at'),
   createdBy: text('created_by'),
   updatedBy: text('updated_by'),
@@ -64,6 +64,12 @@ export const rolePermissions = sqliteTable('role_permissions', {
   id: text('id').primaryKey(),
   roleId: text('role_id').notNull().references(() => masterRole.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   permissionId: text('permission_id').notNull().references(() => masterPermission.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
 
 // -------------------------------------------------------------
@@ -73,8 +79,8 @@ export const masterBlock = sqliteTable('master_block', {
   id: text('id').primaryKey(),
   name: text('name').notNull(), // e.g. "Blok A", "Blok B"
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
   deletedAt: text('deleted_at'),
   createdBy: text('created_by'),
   updatedBy: text('updated_by'),
@@ -87,8 +93,8 @@ export const masterRoom = sqliteTable('master_room', {
   capacity: integer('capacity').notNull(),
   blockId: text('block_id').notNull().references(() => masterBlock.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
   deletedAt: text('deleted_at'),
   createdBy: text('created_by'),
   updatedBy: text('updated_by'),
@@ -103,8 +109,8 @@ export const masterSchool = sqliteTable('master_school', {
   name: text('name').notNull(), // e.g. "MTs PPDS", "MA PPDS"
   type: text('type').notNull(), // "Formal" | "Diniyah"
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
   deletedAt: text('deleted_at'),
   createdBy: text('created_by'),
   updatedBy: text('updated_by'),
@@ -116,8 +122,8 @@ export const masterClass = sqliteTable('master_class', {
   name: text('name').notNull(), // e.g. "Kelas 7A", "Ula 1"
   schoolId: text('school_id').notNull().references(() => masterSchool.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
   deletedAt: text('deleted_at'),
   createdBy: text('created_by'),
   updatedBy: text('updated_by'),
@@ -132,8 +138,8 @@ export const masterDepartment = sqliteTable('master_department', {
   name: text('name').notNull(), // e.g. "Keamanan", "Pendidikan"
   type: text('type').notNull(), // "Divisi", "Seksi"
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
   deletedAt: text('deleted_at'),
   createdBy: text('created_by'),
   updatedBy: text('updated_by'),
@@ -145,8 +151,8 @@ export const masterPosition = sqliteTable('master_position', {
   name: text('name').notNull(), // e.g. "Ketua Keamanan", "Anggota"
   departmentId: text('department_id').notNull().references(() => masterDepartment.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
   deletedAt: text('deleted_at'),
   createdBy: text('created_by'),
   updatedBy: text('updated_by'),
@@ -170,6 +176,12 @@ export const masterSantri = sqliteTable('master_santri', {
   registrationNumber: text('registration_number'),
   previousSchool: text('previous_school'),
   boardingEntryDate: text('boarding_entry_date'),
+  
+  // EXIT DETAILS (Lulus / Boyong / Pindah)
+  exitYear: text('exit_year'),
+  exitDate: text('exit_date'),
+  exitReason: text('exit_reason'), // e.g. "Lulus", "Boyong", "Pindah", "Dikeluarkan"
+  exitNotes: text('exit_notes'),
   
   // PERSONAL DATA
   photoUrl: text('photo_url'),
@@ -242,8 +254,8 @@ export const masterSantri = sqliteTable('master_santri', {
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   
   // AUDIT
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
   deletedAt: text('deleted_at'),
   createdBy: text('created_by'),
   updatedBy: text('updated_by'),
@@ -260,8 +272,8 @@ export const masterPengurus = sqliteTable('master_pengurus', {
   passwordHash: text('password_hash').notNull(),
   statusAktif: text('status_aktif').notNull(), // "Aktif" | "Nonaktif"
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
   deletedAt: text('deleted_at'),
   createdBy: text('created_by'),
   updatedBy: text('updated_by'),
@@ -274,6 +286,12 @@ export const pengurusPositions = sqliteTable('pengurus_positions', {
   positionId: text('position_id').notNull().references(() => masterPosition.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   periodId: text('period_id').notNull().references(() => masterPeriod.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   status: text('status').notNull(), // "Aktif" | "Selesai"
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 }, (t) => ({
   unqPengurusPositionPeriod: unique('unq_pengurus_position_period').on(t.pengurusId, t.positionId, t.periodId),
 }));
@@ -282,4 +300,10 @@ export const pengurusRoles = sqliteTable('pengurus_roles', {
   id: text('id').primaryKey(),
   pengurusId: text('pengurus_id').notNull().references(() => masterPengurus.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   roleId: text('role_id').notNull().references(() => masterRole.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });

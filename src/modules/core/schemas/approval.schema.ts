@@ -15,7 +15,14 @@ export const approvalPolicies = sqliteTable('approval_policies', {
   isActive: integer('is_active').notNull().default(1), // 1 = active, 0 = inactive
   periodId: text('period_id').notNull().references(() => periodes.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const approvalRequests = sqliteTable('approval_requests', {
   id: text('id').primaryKey(),
@@ -24,15 +31,29 @@ export const approvalRequests = sqliteTable('approval_requests', {
   status: text('status').notNull(), // "Pending" | "Approved" | "Rejected"
   periodId: text('period_id').notNull().references(() => periodes.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const approvalSteps = sqliteTable('approval_steps', {
   id: text('id').primaryKey(),
   approvalRequestId: text('approval_request_id').notNull().references(() => approvalRequests.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   stepOrder: integer('step_order').notNull(),
   roleId: text('role_id').notNull().references(() => masterRoles.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  status: text('status').notNull(), // "Pending" | "Approved" | "Skipped" | "Rejected"
+  status: text('status').notNull(), // "Pending" | "Approved" | "Skipped" | "Rejected",
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const approvalHistories = sqliteTable('approval_histories', {
   id: text('id').primaryKey(),
@@ -41,5 +62,12 @@ export const approvalHistories = sqliteTable('approval_histories', {
   action: text('action').notNull(), // "Approved" | "Rejected"
   note: text('note'),
   timestamp: text('timestamp').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 

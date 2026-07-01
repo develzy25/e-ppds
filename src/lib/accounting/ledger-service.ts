@@ -1,2 +1,2 @@
 // COMPATIBILITY LAYER
-export * from '@/modules/keuangan/accounting/ledger-service';
+export * from '@/modules/keuangan/services/ledger-service';

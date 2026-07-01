@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Menu, Bell, Sun, Moon, LogOut, ChevronDown, ShieldCheck } from 'lucide-react';
+import { Menu, Bell, Sun, Moon, LogOut, ChevronDown } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
-import { mockUsers } from '@/config/mock-data';
 import { Breadcrumb } from './breadcrumb';
 import { QuickAction } from './quick-action';
 import { ThemeSwitcher } from './theme-switcher';
@@ -11,7 +10,6 @@ import { ThemeSwitcher } from './theme-switcher';
 export function AppHeader() {
   const {
     currentUser,
-    changeUser,
     notifications,
     markAsRead,
     markAllAsRead,
@@ -61,32 +59,6 @@ export function AppHeader() {
 
       {/* ── RIGHT ── */}
       <div className="flex items-center gap-2">
-
-        {/* Role Switcher */}
-        <div
-          className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-semibold transition-all duration-200"
-          style={{
-            background: 'color-mix(in oklch, var(--primary) 8%, transparent)',
-            borderColor: 'color-mix(in oklch, var(--primary) 25%, transparent)',
-            color: 'var(--primary)',
-            boxShadow: '0 0 12px color-mix(in oklch, var(--primary) 12%, transparent)',
-          }}
-        >
-          <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-          <span>Simulasi:</span>
-          <select
-            value={currentUser.id}
-            onChange={e => changeUser(e.target.value)}
-            className="bg-transparent border-none text-[11px] font-bold focus:ring-0 cursor-pointer outline-none"
-            style={{ color: 'var(--primary)' }}
-          >
-            {mockUsers.map(u => (
-              <option key={u.id} value={u.id} className="bg-card text-foreground font-semibold">
-                {u.name.split(' ').slice(0, 2).join(' ')} ({u.primaryRole.replace(/_/g, ' ')})
-              </option>
-            ))}
-          </select>
-        </div>
 
         {/* Quick Actions */}
         <QuickAction />

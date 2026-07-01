@@ -1,8 +1,10 @@
+import { BusinessError, NotFoundError } from '@/infrastructure/errors';
 import { UnitOfWork } from '@/lib/database/unit-of-work';
 import { RepositoryFactory } from '@/lib/database/repository-factory';
 import crypto from 'crypto';
 import { eq, sql, and, desc } from 'drizzle-orm';
 import { labComputers, labSessions, labTransactions, labTransactionItems } from '../schemas/lab.schema';
+import { insertAuditLog } from '@/modules/core/services/audit.service';
 
 export class LaboratoriumService {
   constructor(private readonly uow: UnitOfWork) {}
@@ -25,12 +27,12 @@ export class LaboratoriumService {
 
       // Get computer
       const computer = await computerRepo.findById(computerId);
-      if (!computer) throw new Error('Komputer tidak ditemukan');
-      if (computer.status !== 'Available') throw new Error('Komputer sedang digunakan atau maintenance');
+      if (!computer) throw new NotFoundError('Komputer tidak ditemukan');
+      if (computer.status !== 'Available') throw new BusinessError('BUSINESS_ERROR', 'Komputer sedang digunakan atau maintenance');
 
       // Get tariff
       const tariff = await tariffRepo.findById(tariffId);
-      if (!tariff) throw new Error('Tarif tidak ditemukan');
+      if (!tariff) throw new NotFoundError('Tarif tidak ditemukan');
 
       const sessionId = `session-${crypto.randomBytes(8).toString('hex')}`;
 
@@ -50,6 +52,14 @@ export class LaboratoriumService {
         updatedAt: now,
       });
 
+      await insertAuditLog({
+        module: 'laboratorium',
+        entityName: 'lab_sessions',
+        entityId: sessionId,
+        action: 'CREATE',
+        performedBy: santriId || 'SYSTEM',
+      });
+
       return sessionId;
     });
   }
@@ -66,8 +76,8 @@ export class LaboratoriumService {
       const tariffRepo = factory.createLabTariffRepository();
 
       const session = await sessionRepo.findById(sessionId);
-      if (!session) throw new Error('Sesi tidak ditemukan');
-      if (session.status !== 'Running') throw new Error('Sesi tidak sedang berjalan');
+      if (!session) throw new NotFoundError('Sesi tidak ditemukan');
+      if (session.status !== 'Running') throw new BusinessError('BUSINESS_ERROR', 'Sesi tidak sedang berjalan');
 
       const now = new Date().toISOString();
 
@@ -105,6 +115,14 @@ export class LaboratoriumService {
         totalAmount,
         status: 'Unpaid',
         createdAt: now,
+      });
+
+      await insertAuditLog({
+        module: 'laboratorium',
+        entityName: 'lab_transactions',
+        entityId: transactionId,
+        action: 'CREATE',
+        performedBy: session.santriId || 'SYSTEM',
       });
 
       return invoiceNumber;
@@ -156,14 +174,14 @@ export class LaboratoriumService {
   }
 
   async pauseBillingSession(sessionId: string): Promise<void> {
-    throw new Error('Not implemented'); // Schema labSessions missing status 'Paused' and duration field
+    throw new BusinessError('BUSINESS_ERROR', 'Not implemented'); // Schema labSessions missing status 'Paused' and duration field
   }
 
   async resumeBillingSession(sessionId: string): Promise<void> {
-    throw new Error('Not implemented'); 
+    throw new BusinessError('BUSINESS_ERROR', 'Not implemented'); 
   }
 
   async handlePowerOutage(pondokId: string): Promise<number> {
-    throw new Error('Not implemented');
+    throw new BusinessError('BUSINESS_ERROR', 'Not implemented');
   }
 }

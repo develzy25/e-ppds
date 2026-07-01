@@ -1,24 +1,71 @@
+'use strict';
 'use server';
 
-import { getCurrentUser as getRealUser } from '@/lib/services/auth';
+import { getCurrentUser } from '@/lib/services/auth';
+import { db } from '@/db';
 import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { KeamananService } from '../services/keamanan.service';
-import { errorResponse, successResponse } from '@/shared/utils/action-error';
+import { revalidatePath } from 'next/cache';
 
-const service = new KeamananService(new UnitOfWork());
-
-async function getCurrentUser() {
-  const user = await getRealUser();
+export async function getPermitsAction() {
+  const user = await getCurrentUser();
   if (!user) throw new Error('Unauthorized');
-  return { id: user.userId, pondokId: user.pondokId, permissions: user.permissions };
+  
+  const uow = new UnitOfWork(db);
+  const service = new KeamananService(uow);
+  return service.getPermits(user.pondokId, user.permissions);
 }
 
-export async function getKeamanans() {
-  try {
-    const user = await getCurrentUser();
-    const data = await service.getAllKeamanans(user.pondokId, user.permissions);
-    return successResponse(data);
-  } catch (error: unknown) {
-    return errorResponse(error);
-  }
+export async function getOffensesAction() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error('Unauthorized');
+  
+  const uow = new UnitOfWork(db);
+  const service = new KeamananService(uow);
+  return service.getOffenses(user.pondokId, user.permissions);
+}
+
+export async function approvePermitAction(permitId: string) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error('Unauthorized');
+  
+  const uow = new UnitOfWork(db);
+  const service = new KeamananService(uow);
+  const result = await service.approvePermit(permitId, user.pondokId, user.permissions, user.userId);
+  revalidatePath('/keamanan');
+  return result;
+}
+
+export async function createPermitAction(input: {
+  santriId: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  notes?: string;
+}) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error('Unauthorized');
+  
+  const uow = new UnitOfWork(db);
+  const service = new KeamananService(uow);
+  const result = await service.createPermit(input, user.pondokId, user.permissions, user.userId);
+  revalidatePath('/keamanan');
+  return result;
+}
+
+export async function addOffenseAction(input: {
+  santriId: string;
+  category: string;
+  description: string;
+  points: number;
+  handlerName: string;
+}) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error('Unauthorized');
+  
+  const uow = new UnitOfWork(db);
+  const service = new KeamananService(uow);
+  const result = await service.addOffense(input, user.pondokId, user.permissions, user.userId);
+  revalidatePath('/keamanan');
+  return result;
 }

@@ -171,6 +171,11 @@ export interface HealthRecord {
 // -------------------------------------------------------------
 
 // 1. Data User (Pengurus dengan Multi-Jabatan)
+//
+// PENTING: Format permission WAJIB menggunakan dot-notation
+//          yang sesuai dengan routes.ts: [modul].[resource].[action]
+//          Contoh: 'dashboard.personal.view', 'master.santri.create'
+//
 export const mockUsers: UserProfile[] = [
   {
     id: 'u1',
@@ -179,12 +184,38 @@ export const mockUsers: UserProfile[] = [
     primaryRole: 'ketua_umum',
     additionalRoles: [],
     permissions: [
-      'dewan_harian_dashboard_view', 'dewan_harian_approval_view',
-      'dewan_harian_approval_approve', 'dewan_harian_approval_reject',
-      'dewan_harian_config_view', 'dewan_harian_config_edit',
-      'dashboard_dewan_view', 'dashboard_personal_view', 'dashboard_role_switcher',
-      'musyawarah_dashboard_view', 'musyawarah_sidang_view', 'musyawarah_voting_submit',
-      'musyawarah_voting_view', 'musyawarah_decision_create', 'musyawarah_archive_view'
+      // Dashboard
+      'dashboard.personal.view', 'dashboard.dewan.view',
+      // Master Data (full access for ketua umum)
+      'master.santri.view', 'master.pengurus.view', 'master.role.view',
+      'master.permission.view', 'master.department.view', 'master.jabatan.view',
+      'master.sekolah.view', 'master.kelas.view', 'master.periode.view',
+      'master.room.view', 'master.academic_year.view',
+      // Kesekretariatan
+      'kesekretariatan.umum.view', 'kesekretariatan.satu.view', 'kesekretariatan.dua.view', 'kesekretariatan.tiga.view',
+      'kesekretariatan.organisasi.view', 'kesekretariatan.mutasi.view', 'kesekretariatan.sk.view', 'kesekretariatan.periode.view',
+      'kesekretariatan.santri.view', 'kesekretariatan.kamar.view', 'kesekretariatan.blok.view',
+      'kesekretariatan.surat_masuk.view', 'kesekretariatan.surat_keluar.view', 'kesekretariatan.disposisi.view',
+      // Keuangan
+      'keuangan.dashboard.view', 'keuangan.master.view', 'keuangan.tagihan.view', 'keuangan.pembayaran.view',
+      'keuangan.akuntansi.view', 'keuangan.laporan.view',
+      // Bendahara
+      'bendahara.dashboard.view', 'bendahara.kas.view', 'bendahara.rab.view',
+      'bendahara.rab.approve', 'bendahara.pengajuan.view', 'bendahara.akuntansi.view', 'bendahara.dokumen.view',
+      // Keamanan
+      'keamanan.dashboard.view', 'keamanan.izin.view', 'keamanan.pelanggaran.view', 'keamanan.bullying.view',
+      // Pendidikan
+      'pendidikan.dashboard.view', 'pendidikan.jamiyyah.view', 'pendidikan.wajar.view',
+      // Musyawarah
+      'musyawarah.dashboard.view',
+      // Laboratorium
+      'laboratorium.dashboard.view', 'laboratorium.billing.view', 'laboratorium.billing.start',
+      'laboratorium.pos.create', 'laboratorium.inventory.view', 'laboratorium.service.view',
+      // BUMP
+      'bump.dashboard.view', 'bump.pos.create', 'bump.laundry.view', 'bump.online_order.view',
+      // Other modules
+      'kesehatan.dashboard.view', 'humasy.dashboard.view', 'dms.dashboard.view',
+      'media.dashboard.view', 'pembangunan.dashboard.view', 'takmir.dashboard.view', 'plp.dashboard.view',
     ],
     taskAssignments: []
   },
@@ -196,29 +227,76 @@ export const mockUsers: UserProfile[] = [
     additionalRoles: ['ketua_blok'], // Rangkap Jabatan
     blokId: 'Blok_A', // Domain blok
     permissions: [
-      'sekr_umum_dashboard_view', 'sekr_org_structure_view', 'sekr_org_structure_edit',
-      'sekr_rbac_roles_view', 'sekr_rbac_roles_edit', 'sekr_sk_pengurus_view',
-      'sekr_sk_pengurus_create', 'sekr_sk_pengurus_edit', 'sekr_sk_pengurus_print',
-      'sekr_sk_pengurus_delete', 'sekr_periode_view', 'sekr_periode_manage',
-      'sekr_1_dashboard_view', 'sekr_santri_view', 'sekr_santri_create',
-      'sekr_santri_edit', 'sekr_santri_delete', 'sekr_santri_import', 'sekr_santri_export',
-      'sekr_kamar_view', 'sekr_kamar_create', 'sekr_kamar_edit', 'sekr_kamar_delete',
-      'sekr_blok_view', 'sekr_blok_create', 'sekr_blok_edit', 'sekr_blok_delete',
-      'sekr_formal_view', 'sekr_formal_edit', 'sekr_jamiyyah_view', 'sekr_jamiyyah_edit',
-      'sekr_2_dashboard_view', 'sekr_surat_masuk_view', 'sekr_surat_masuk_create',
-      'sekr_surat_masuk_edit', 'sekr_surat_masuk_delete', 'sekr_surat_keluar_view',
-      'sekr_surat_keluar_create', 'sekr_surat_keluar_edit', 'sekr_surat_keluar_approve',
-      'sekr_surat_keluar_delete', 'sekr_disposisi_view', 'sekr_disposisi_create',
-      'sekr_numbering_view', 'sekr_numbering_manage', 'sekr_template_view',
-      'sekr_template_manage', 'sekr_archive_view', 'sekr_3_dashboard_view',
-      'sekr_agenda_view', 'sekr_agenda_create', 'sekr_agenda_edit', 'sekr_agenda_delete',
-      'sekr_notulen_view', 'sekr_notulen_create', 'sekr_notulen_edit', 'sekr_notulen_delete',
-      'sekr_evaluasi_view', 'sekr_evaluasi_edit', 'sekr_monitoring_view',
-      'sekr_laporan_seksi_view', 'sekr_laporan_seksi_review',
-      'blok_dashboard_view', 'blok_santri_view', 'blok_santri_edit',
-      'blok_pelanggaran_report', 'blok_perizinan_approve', 'blok_kebersihan_input',
-      'dashboard_personal_view', 'dashboard_seksi_view', 'dashboard_role_switcher',
-      'mutasi_request_create', 'mutasi_request_review', 'mutasi_request_approve'
+      // Dashboard
+      'dashboard.personal.view', 'dashboard.dewan.view',
+      // Master Data
+      'master.santri.view', 'master.santri.create', 'master.santri.edit', 'master.santri.delete',
+      'master.santri.import', 'master.santri.export',
+      'master.pengurus.view', 'master.pengurus.create', 'master.pengurus.edit',
+      'master.role.view', 'master.role.edit',
+      'master.permission.view',
+      'master.department.view', 'master.department.create', 'master.department.edit',
+      'master.jabatan.view', 'master.jabatan.create', 'master.jabatan.edit',
+      'master.sekolah.view', 'master.kelas.view',
+      'master.periode.view', 'master.periode.create', 'master.periode.edit',
+      'master.room.view', 'master.room.create', 'master.room.edit',
+      'master.academic_year.view',
+      // Kesekretariatan (full access)
+      'kesekretariatan.umum.view', 'kesekretariatan.satu.view', 'kesekretariatan.dua.view', 'kesekretariatan.tiga.view',
+      'kesekretariatan.organisasi.view', 'kesekretariatan.organisasi.edit',
+      'kesekretariatan.mutasi.view', 'kesekretariatan.mutasi.create',
+      'kesekretariatan.sk.view', 'kesekretariatan.sk.create', 'kesekretariatan.sk.edit', 'kesekretariatan.sk.print', 'kesekretariatan.sk.delete',
+      'kesekretariatan.periode.view', 'kesekretariatan.periode.edit',
+      'kesekretariatan.santri.view', 'kesekretariatan.santri.create', 'kesekretariatan.santri.edit', 'kesekretariatan.santri.delete',
+      'kesekretariatan.kamar.view', 'kesekretariatan.kamar.create', 'kesekretariatan.kamar.edit', 'kesekretariatan.kamar.delete',
+      'kesekretariatan.blok.view', 'kesekretariatan.blok.create', 'kesekretariatan.blok.edit', 'kesekretariatan.blok.delete',
+      'kesekretariatan.surat_masuk.view', 'kesekretariatan.surat_masuk.create', 'kesekretariatan.surat_masuk.edit', 'kesekretariatan.surat_masuk.delete',
+      'kesekretariatan.surat_keluar.view', 'kesekretariatan.surat_keluar.create', 'kesekretariatan.surat_keluar.edit', 'kesekretariatan.surat_keluar.approve', 'kesekretariatan.surat_keluar.delete',
+      'kesekretariatan.disposisi.view', 'kesekretariatan.disposisi.create',
+      // DMS
+      'dms.dashboard.view',
+      // Musyawarah
+      'musyawarah.dashboard.view',
+    ],
+    taskAssignments: []
+  },
+  {
+    id: 'usr-sekr-ppds',
+    name: 'Sekretariat PPDS',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+    primaryRole: 'sekretaris',
+    additionalRoles: [],
+    permissions: [
+      // Dashboard
+      'dashboard.personal.view', 'dashboard.dewan.view',
+      // Master Data
+      'master.santri.view', 'master.santri.create', 'master.santri.edit', 'master.santri.delete',
+      'master.santri.import', 'master.santri.export',
+      'master.pengurus.view', 'master.pengurus.create', 'master.pengurus.edit',
+      'master.role.view', 'master.role.edit',
+      'master.permission.view',
+      'master.department.view', 'master.department.create', 'master.department.edit',
+      'master.jabatan.view', 'master.jabatan.create', 'master.jabatan.edit',
+      'master.sekolah.view', 'master.kelas.view',
+      'master.periode.view', 'master.periode.create', 'master.periode.edit',
+      'master.room.view', 'master.room.create', 'master.room.edit',
+      'master.academic_year.view',
+      // Kesekretariatan (full access)
+      'kesekretariatan.umum.view', 'kesekretariatan.satu.view', 'kesekretariatan.dua.view', 'kesekretariatan.tiga.view',
+      'kesekretariatan.organisasi.view', 'kesekretariatan.organisasi.edit',
+      'kesekretariatan.mutasi.view', 'kesekretariatan.mutasi.create',
+      'kesekretariatan.sk.view', 'kesekretariatan.sk.create', 'kesekretariatan.sk.edit', 'kesekretariatan.sk.print', 'kesekretariatan.sk.delete',
+      'kesekretariatan.periode.view', 'kesekretariatan.periode.edit',
+      'kesekretariatan.santri.view', 'kesekretariatan.santri.create', 'kesekretariatan.santri.edit', 'kesekretariatan.santri.delete',
+      'kesekretariatan.kamar.view', 'kesekretariatan.kamar.create', 'kesekretariatan.kamar.edit', 'kesekretariatan.kamar.delete',
+      'kesekretariatan.blok.view', 'kesekretariatan.blok.create', 'kesekretariatan.blok.edit', 'kesekretariatan.blok.delete',
+      'kesekretariatan.surat_masuk.view', 'kesekretariatan.surat_masuk.create', 'kesekretariatan.surat_masuk.edit', 'kesekretariatan.surat_masuk.delete',
+      'kesekretariatan.surat_keluar.view', 'kesekretariatan.surat_keluar.create', 'kesekretariatan.surat_keluar.edit', 'kesekretariatan.surat_keluar.approve', 'kesekretariatan.surat_keluar.delete',
+      'kesekretariatan.disposisi.view', 'kesekretariatan.disposisi.create',
+      // DMS
+      'dms.dashboard.view',
+      // Musyawarah
+      'musyawarah.dashboard.view',
     ],
     taskAssignments: []
   },
@@ -230,21 +308,15 @@ export const mockUsers: UserProfile[] = [
     additionalRoles: ['ketua_blok', 'anggota_seksi'], // Kasie Keamanan + Ketua Blok A + Anggota PLP
     blokId: 'Blok_A',
     permissions: [
-      'keamanan_dashboard_view', 'keamanan_izin_view', 'keamanan_izin_create',
-      'keamanan_izin_approve', 'keamanan_gate_check', 'keamanan_izin_overdue',
-      'keamanan_pelanggaran_view', 'keamanan_pelanggaran_create', 'keamanan_pelanggaran_approve',
-      'keamanan_bullying_view', 'keamanan_bullying_report', 'keamanan_bullying_followup',
-      'keamanan_formal_sekolah_view', 'keamanan_formal_sekolah_create', 'keamanan_formal_sekolah_edit',
-      'keamanan_formal_jadwal_view', 'keamanan_formal_jadwal_create', 'keamanan_formal_jadwal_edit',
-      'keamanan_formal_absensi_view', 'keamanan_formal_absensi_input',
-      'keamanan_registrasi_motor_view', 'keamanan_registrasi_motor_create', 'keamanan_registrasi_motor_print',
-      'keamanan_registrasi_elektronik_view', 'keamanan_registrasi_elektronik_create', 'keamanan_registrasi_elektronik_print',
-      'keamanan_registrasi_kompor_view', 'keamanan_registrasi_kompor_create', 'keamanan_registrasi_kompor_print',
-      'keamanan_skkb_view', 'keamanan_skkb_create', 'keamanan_skkb_verify', 'keamanan_skkb_print',
-      'blok_dashboard_view', 'blok_santri_view', 'blok_santri_edit', 'blok_pelanggaran_report',
-      'blok_perizinan_approve', 'blok_kebersihan_input',
-      'plp_dashboard_view', 'plp_kelistrikan_view', 'plp_sound_view', 'plp_sound_pinjam',
-      'dashboard_personal_view', 'dashboard_seksi_view', 'dashboard_role_switcher'
+      // Dashboard
+      'dashboard.personal.view',
+      // Keamanan (full access)
+      'keamanan.dashboard.view',
+      'keamanan.izin.view', 'keamanan.izin.create', 'keamanan.izin.approve',
+      'keamanan.pelanggaran.view', 'keamanan.pelanggaran.create', 'keamanan.pelanggaran.approve',
+      'keamanan.bullying.view', 'keamanan.bullying.report', 'keamanan.bullying.followup',
+      // PLP (sebagai anggota)
+      'plp.dashboard.view',
     ],
     taskAssignments: ['petugas_registrasi'] // Ditugaskan sebagai petugas registrasi harian
   },
@@ -255,11 +327,19 @@ export const mockUsers: UserProfile[] = [
     primaryRole: 'bendahara_umum',
     additionalRoles: [],
     permissions: [
-      'bendahara_dashboard_view', 'bendahara_kas_view', 'bendahara_kas_debit',
-      'bendahara_kas_credit', 'bendahara_anggaran_view', 'bendahara_anggaran_review',
-      'bendahara_anggaran_approve', 'bendahara_lpj_view', 'bendahara_lpj_verify',
-      'bendahara_setoran_seksi_view', 'bendahara_setoran_seksi_verify',
-      'dashboard_personal_view', 'dashboard_seksi_view', 'dashboard_role_switcher'
+      // Dashboard
+      'dashboard.personal.view',
+      // Bendahara (full access)
+      'bendahara.dashboard.view',
+      'bendahara.kas.view', 'bendahara.kas.debit', 'bendahara.kas.credit',
+      'bendahara.rab.view', 'bendahara.rab.approve',
+      'bendahara.pengajuan.view', 'bendahara.pengajuan.review',
+      'bendahara.akuntansi.view',
+      'bendahara.dokumen.view', 'bendahara.dokumen.verify',
+      // Keuangan (view only for oversight)
+      'keuangan.dashboard.view', 'keuangan.master.view',
+      'keuangan.tagihan.view', 'keuangan.pembayaran.view',
+      'keuangan.akuntansi.view', 'keuangan.laporan.view',
     ],
     taskAssignments: []
   },
@@ -270,13 +350,16 @@ export const mockUsers: UserProfile[] = [
     primaryRole: 'kasie', // Kasie Lab
     additionalRoles: ['anggota_seksi'], // Kasie Lab + Anggota Media
     permissions: [
-      'lab_dashboard_view', 'lab_billing_session_view', 'lab_billing_session_close',
-      'lab_pos_transaction_view', 'lab_pos_transaction_create', 'lab_pos_report_view',
-      'lab_inventaris_edit', 'lab_kerusakan_report', 'lab_keuangan_setor',
-      'media_dashboard_view', 'media_dokumentasi_view', 'media_dokumentasi_create',
-      'media_dokumentasi_upload', 'media_dokumentasi_publish', 'media_publikasi_edit',
-      'media_inventaris_edit',
-      'dashboard_personal_view', 'dashboard_seksi_view', 'dashboard_role_switcher'
+      // Dashboard
+      'dashboard.personal.view',
+      // Laboratorium (full access)
+      'laboratorium.dashboard.view',
+      'laboratorium.billing.view', 'laboratorium.billing.start',
+      'laboratorium.pos.view', 'laboratorium.pos.create',
+      'laboratorium.inventory.view', 'laboratorium.inventory.edit',
+      'laboratorium.service.view', 'laboratorium.service.create',
+      // Media (sebagai anggota)
+      'media.dashboard.view',
     ],
     taskAssignments: ['petugas_billing_lab']
   }

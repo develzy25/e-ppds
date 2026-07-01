@@ -8,8 +8,7 @@ import { Briefcase, ShoppingBag, Box, ShieldCheck } from 'lucide-react';
 export default function BUMPDashboard() {
   const { currentUser } = useApp();
 
-  const isAuthorized = currentUser.permissions.includes('bump_dashboard_view') || 
-                       currentUser.primaryRole === 'ketua_umum'; // Ketua Umum has access
+  const isAuthorized = currentUser.permissions.includes('bump.dashboard.view');
 
   if (!isAuthorized) {
     return (

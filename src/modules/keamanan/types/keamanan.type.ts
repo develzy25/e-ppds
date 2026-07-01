@@ -1,4 +1,7 @@
-import { keamananTable } from '../schemas/keamanan.schema';
+import { keamananPermits, keamananOffenses } from '../schemas/keamanan.schema';
 
-export type KeamananEntity = typeof keamananTable.$inferSelect;
-export type NewKeamanan = typeof keamananTable.$inferInsert;
+export type KeamananPermitEntity = typeof keamananPermits.$inferSelect;
+export type NewKeamananPermit = typeof keamananPermits.$inferInsert;
+
+export type KeamananOffenseEntity = typeof keamananOffenses.$inferSelect;
+export type NewKeamananOffense = typeof keamananOffenses.$inferInsert;

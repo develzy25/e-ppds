@@ -8,8 +8,7 @@ import { Compass, Calendar, Coins, ShieldCheck } from 'lucide-react';
 export default function TakmirDashboard() {
   const { currentUser } = useApp();
 
-  const isAuthorized = currentUser.permissions.includes('takmir_dashboard_view') || 
-                       currentUser.primaryRole === 'ketua_umum'; // Ketua Umum has access
+  const isAuthorized = currentUser.permissions.includes('takmir.dashboard.view');
 
   if (!isAuthorized) {
     return (

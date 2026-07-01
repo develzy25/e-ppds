@@ -13,6 +13,13 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "scripts/**",
+    // Build outputs & local tooling:
+    ".open-next/**",
+    ".wrangler/**",
+    // Root utility scripts (CommonJS):
+    "*.js",
+    // Local database file:
+    "sqlite.db",
   ]),
   {
     rules: {

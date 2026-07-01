@@ -1,6 +1,6 @@
 import { db } from '@/db';
-import { masterPermissions, rolePermissions } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { masterPermissions, masterPermission, rolePermissions } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 import crypto from 'crypto';
 
 export const permissionsList = [
@@ -28,9 +28,21 @@ export const permissionsList = [
 
 export async function seedPermissions(pondokId: string) {
   for (const perm of permissionsList) {
+    // Seed plural table
     const permExists = await db.select().from(masterPermissions).where(eq(masterPermissions.id, perm.id));
     if (permExists.length === 0) {
       await db.insert(masterPermissions).values({
+        ...perm,
+        pondokId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    // Seed singular table
+    const permSingularExists = await db.select().from(masterPermission).where(eq(masterPermission.id, perm.id));
+    if (permSingularExists.length === 0) {
+      await db.insert(masterPermission).values({
         ...perm,
         pondokId,
         createdAt: new Date().toISOString(),
@@ -69,13 +81,24 @@ export async function seedRolePermissions() {
     { roleId: 'role-keam', permissionId: 'perm-p-a' }
   );
 
-  const existingMappings = await db.select().from(rolePermissions);
-  if (existingMappings.length === 0) {
-    const inserts = mappingList.map((m) => ({
-      id: `map-${crypto.randomBytes(8).toString('hex')}`,
-      roleId: m.roleId,
-      permissionId: m.permissionId,
-    }));
-    await db.insert(rolePermissions).values(inserts);
+  for (const m of mappingList) {
+    const exists = await db
+      .select()
+      .from(rolePermissions)
+      .where(
+        and(
+          eq(rolePermissions.roleId, m.roleId),
+          eq(rolePermissions.permissionId, m.permissionId)
+        )
+      );
+    if (exists.length === 0) {
+      await db.insert(rolePermissions).values({
+        id: `map-${crypto.randomBytes(8).toString('hex')}`,
+        roleId: m.roleId,
+        permissionId: m.permissionId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    }
   }
 }

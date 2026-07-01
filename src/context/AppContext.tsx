@@ -1,6 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { BusinessError } from '@/infrastructure/errors';
+
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { UserProfile, mockUsers } from '@/config/mock-data';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -239,10 +241,10 @@ export function AppProvider({ children, initialSidebarOpen = true }: { children:
           id: dbUser.userId,
           name: dbUser.name,
           avatar: matchedMock?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-          primaryRole: dbUser.roles[0] || 'pengurus',
-          additionalRoles: dbUser.roles.slice(1) || [],
+          primaryRole: matchedMock?.primaryRole || dbUser.roles[0] || 'pengurus',
+          additionalRoles: matchedMock?.additionalRoles || dbUser.roles.slice(1) || [],
           blokId: matchedMock?.blokId,
-          permissions: dbUser.permissions || [],
+          permissions: matchedMock?.permissions || dbUser.permissions || [],
           taskAssignments: matchedMock?.taskAssignments || [],
         };
         setCurrentUser(mappedUser);
@@ -335,7 +337,7 @@ export function AppProvider({ children, initialSidebarOpen = true }: { children:
   }, [router]);
 
   // Real logout implementation
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/logout', { method: 'POST' });
       if (res.ok) {
@@ -346,22 +348,21 @@ export function AppProvider({ children, initialSidebarOpen = true }: { children:
       console.error('Logout failed:', e);
       router.push('/login');
     }
-  };
+  }, [router]);
 
-  const changeUser = (userId: string) => {
-    const foundUser = mockUsers.find(u => u.id === userId);
-    if (foundUser) {
-      setCurrentUser(foundUser);
-      // Trigger notification for demo feedback
-      addNotification(
-        'Peran Berubah',
-        `Sekarang bertindak sebagai ${foundUser.name}`,
-        'umum'
-      );
-    }
-  };
+  // Triggers Toast
+  const showToast = useCallback((options: ToastOptions) => {
+    const id = generateUniqueId('toast');
+    const duration = options.duration || 4500;
+    setToasts(prev => [...prev, { id, ...options, duration }]);
+    if (soundEnabled) playSynthSound(options.type);
+    
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, duration);
+  }, [soundEnabled]);
 
-  const addNotification = (title: string, message: string, category: AppNotification['category']) => {
+  const addNotification = useCallback((title: string, message: string, category: AppNotification['category']) => {
     const newNotif: AppNotification = {
       id: generateUniqueId('n'),
       title,
@@ -383,32 +384,33 @@ export function AppProvider({ children, initialSidebarOpen = true }: { children:
       message,
       type: toastType
     });
-  };
+  }, [showToast]);
 
-  const markAsRead = (id: string) => {
+  const changeUser = useCallback((userId: string) => {
+    const foundUser = mockUsers.find(u => u.id === userId);
+    if (foundUser) {
+      setCurrentUser(foundUser);
+      // Trigger notification for demo feedback
+      addNotification(
+        'Peran Berubah',
+        `Sekarang bertindak sebagai ${foundUser.name}`,
+        'umum'
+      );
+    }
+  }, [addNotification]);
+
+  const markAsRead = useCallback((id: string) => {
     setNotifications(prev =>
       prev.map(n => (n.id === id ? { ...n, isRead: true } : n))
     );
-  };
+  }, []);
 
-  const markAllAsRead = () => {
+  const markAllAsRead = useCallback(() => {
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-  };
-
-  // Triggers Toast
-  const showToast = (options: ToastOptions) => {
-    const id = generateUniqueId('toast');
-    const duration = options.duration || 4500;
-    setToasts(prev => [...prev, { id, ...options, duration }]);
-    if (soundEnabled) playSynthSound(options.type);
-    
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, duration);
-  };
+  }, []);
 
   // Triggers Center Screen Popup (Glassmorphic)
-  const showPopup = (options: PopupOptions) => {
+  const showPopup = useCallback((options: PopupOptions) => {
     setPopup(options);
     if (soundEnabled) playSynthSound(options.type);
     
@@ -423,35 +425,67 @@ export function AppProvider({ children, initialSidebarOpen = true }: { children:
         });
       }, options.duration);
     }
-  };
+  }, [soundEnabled]);
 
   // Triggers Confirmation Dialog (Blocking Overlay)
-  const showConfirm = (options: ConfirmOptions) => {
+  const showConfirm = useCallback((options: ConfirmOptions) => {
     setConfirm(options);
     if (soundEnabled) playSynthSound('confirm');
-  };
+  }, [soundEnabled]);
+
+  // Override global window.alert to use premium showToast
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.alert = (message: string) => {
+        const lowerMsg = message.toLowerCase();
+        const isError = lowerMsg.includes('gagal') || lowerMsg.includes('kurang') || lowerMsg.includes('ditolak') || lowerMsg.includes('salah') || lowerMsg.includes('batas');
+        
+        showToast({
+          title: isError ? 'Peringatan' : 'Informasi',
+          message: message,
+          type: isError ? 'error' : 'success',
+          duration: 4500
+        });
+      };
+    }
+  }, [showToast]);
+
+  const contextValue = useMemo(() => ({
+    currentUser,
+    changeUser,
+    notifications,
+    addNotification,
+    markAsRead,
+    markAllAsRead,
+    isSidebarOpen,
+    setSidebarOpen,
+    soundEnabled,
+    setSoundEnabled,
+    showToast,
+    showPopup,
+    showConfirm,
+    isLoadingUser,
+    sessionExpired,
+    logout
+  }), [
+    currentUser,
+    changeUser,
+    notifications,
+    addNotification,
+    markAsRead,
+    markAllAsRead,
+    isSidebarOpen,
+    soundEnabled,
+    showToast,
+    showPopup,
+    showConfirm,
+    isLoadingUser,
+    sessionExpired,
+    logout
+  ]);
 
   return (
-    <AppContext.Provider
-      value={{
-        currentUser,
-        changeUser,
-        notifications,
-        addNotification,
-        markAsRead,
-        markAllAsRead,
-        isSidebarOpen,
-        setSidebarOpen,
-        soundEnabled,
-        setSoundEnabled,
-        showToast,
-        showPopup,
-        showConfirm,
-        isLoadingUser,
-        sessionExpired,
-        logout
-      }}
-    >
+    <AppContext.Provider value={contextValue}>
       {children}
 
       {/* Global Real-time Toast Containers (Top Right) */}
@@ -713,7 +747,7 @@ export function AppProvider({ children, initialSidebarOpen = true }: { children:
 export function useApp() {
   const context = useContext(AppContext);
   if (!context) {
-    throw new Error('useApp must be used within an AppProvider');
+    throw new BusinessError('BUSINESS_ERROR', 'useApp must be used within an AppProvider');
   }
   return context;
 }

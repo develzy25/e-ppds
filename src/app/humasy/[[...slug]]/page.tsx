@@ -8,7 +8,7 @@ import { Truck, Users, Gift, ShieldCheck } from 'lucide-react';
 export default function HumasyDashboard() {
   const { currentUser } = useApp();
 
-  const isAuthorized = currentUser.permissions.includes('humasy_dashboard_view');
+  const isAuthorized = currentUser.permissions.includes('humasy.dashboard.view');
 
   if (!isAuthorized) {
     return (

@@ -1,4 +1,4 @@
-import { SekolahPageClient } from '@/modules/master/sekolah/components/SekolahPageClient';
+import { SekolahPageClient } from '@/modules/master/components/SekolahPageClient';
 
 export const metadata = {
   title: 'Master Sekolah - PPDS ERP',

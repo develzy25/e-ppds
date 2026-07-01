@@ -11,8 +11,8 @@ export const keuanganMasterJenisTagihan = sqliteTable('keuangan_master_jenis_tag
   category: text('category').notNull(), // "Bulanan" | "Tahunan" | "Insidental"
   description: text('description'),
     pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-    createdAt: text('created_at').notNull(),
-    updatedAt: text('updated_at').notNull(),
+    createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+    updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
     deletedAt: text('deleted_at'),
     createdBy: text('created_by'),
     updatedBy: text('updated_by'),
@@ -27,8 +27,8 @@ export const keuanganMasterTarif = sqliteTable('keuangan_master_tarif', {
   amount: real('amount').notNull(),
   description: text('description'),
     pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-    createdAt: text('created_at').notNull(),
-    updatedAt: text('updated_at').notNull(),
+    createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+    updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
     deletedAt: text('deleted_at'),
     createdBy: text('created_by'),
     updatedBy: text('updated_by'),
@@ -49,9 +49,13 @@ export const keuanganTagihan = sqliteTable('keuangan_tagihan', {
   remainingAmount: real('remaining_amount').notNull(), // For partial payments / Piutang
   status: text('status').notNull(), // "Unpaid" | "Partial" | "Paid" | "Void"
   dueDate: text('due_date'),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
-    pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
+  pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 }, (t) => ({
   idxSantriTagihan: index('idx_santri_tagihan').on(t.santriId, t.status),
 }));
@@ -68,7 +72,12 @@ export const keuanganPembayaran = sqliteTable('keuangan_pembayaran', {
   paymentDate: text('payment_date').notNull(),
   cashierId: text('cashier_id').notNull(), // References User ID
   status: text('status').notNull(), // "Success" | "Void"
-  createdAt: text('created_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
 
 export const keuanganPembayaranDetail = sqliteTable('keuangan_pembayaran_detail', {
@@ -76,6 +85,12 @@ export const keuanganPembayaranDetail = sqliteTable('keuangan_pembayaran_detail'
   pembayaranId: text('pembayaran_id').notNull().references(() => keuanganPembayaran.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
   tagihanId: text('tagihan_id').notNull().references(() => keuanganTagihan.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   amountPaid: real('amount_paid').notNull(), // Can be partial
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
 
 // -------------------------------------------------------------
@@ -89,7 +104,12 @@ export const keuanganBukuKas = sqliteTable('keuangan_buku_kas', {
   description: text('description').notNull(),
   referenceId: text('reference_id'), // e.g. receiptNumber
   saldo: real('saldo').notNull(),
-  createdAt: text('created_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
 
 export const keuanganRekonsiliasi = sqliteTable('keuangan_rekonsiliasi', {
@@ -101,6 +121,12 @@ export const keuanganRekonsiliasi = sqliteTable('keuangan_rekonsiliasi', {
   status: text('status').notNull(), // "Matched" | "Unmatched" | "Resolved"
   notes: text('notes'),
   resolvedAt: text('resolved_at'),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
 
 

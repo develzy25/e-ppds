@@ -1,4 +1,4 @@
-import { JabatanPageClient } from '@/modules/master/jabatan/components/JabatanPageClient';
+import { JabatanPageClient } from '@/modules/master/components/JabatanPageClient';
 
 export const metadata = {
   title: 'Master Jabatan - PPDS ERP',

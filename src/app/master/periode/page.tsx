@@ -1,4 +1,4 @@
-import { PeriodePageClient } from '@/modules/master/periode/components/PeriodePageClient';
+import { PeriodePageClient } from '@/modules/master/components/PeriodePageClient';
 
 export const metadata = {
   title: 'Master Periode - PPDS ERP',

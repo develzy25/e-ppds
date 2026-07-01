@@ -1,4 +1,4 @@
-import { RolePageClient } from '@/modules/master/role/components/RolePageClient';
+import { RolePageClient } from '@/modules/master/components/RolePageClient';
 
 export const metadata = {
   title: 'Master Role - PPDS ERP',

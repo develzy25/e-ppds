@@ -13,7 +13,7 @@ export default function BendaharaDashboard() {
   const [cashBalance, setCashBalance] = useState(142850000);
   const [budgets, setBudgets] = useState(mockBudgets);
 
-  const isAuthorized = currentUser.permissions.includes('bendahara_dashboard_view');
+  const isAuthorized = currentUser.permissions.includes('bendahara.dashboard.view');
 
   const approveBudget = (id: string, amount: number) => {
     setBudgets(prev => prev.map(b => b.id === id ? { ...b, status: 'Pencairan' } : b));
@@ -50,7 +50,7 @@ export default function BendaharaDashboard() {
         <ShieldCheck className="h-10 w-10 text-destructive mb-3" />
         <h2 className="text-sm font-bold text-foreground">Akses Ditolak</h2>
         <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-          Anda tidak memiliki izin `bendahara_dashboard_view`.
+          Anda tidak memiliki izin `bendahara.dashboard.view`.
           Silakan gunakan simulasi switcher role di Header untuk berganti peran menjadi H. Zaid Muzakki (Bendahara Umum).
         </p>
       </div>

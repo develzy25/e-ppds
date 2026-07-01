@@ -44,7 +44,7 @@ export default function MediaDashboard() {
   const [errorMsg, setErrorMsg] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
-  const isAuthorized = currentUser.permissions.includes('media_dashboard_view');
+  const isAuthorized = currentUser.permissions.includes('media.dashboard.view');
 
   const addPhotoSimulate = () => {
     setErrorMsg('');

@@ -22,7 +22,7 @@ export default function DashboardDewanHarian() {
   }, []);
 
   // Filter access (Dewan Harian only)
-  const isAuthorized = currentUser.permissions.includes('dewan_harian_dashboard_view');
+  const isAuthorized = currentUser.permissions.includes('dashboard.dewan.view');
 
   // Chart Mock Data
   const cashflowData = [
@@ -48,7 +48,7 @@ export default function DashboardDewanHarian() {
         <ShieldCheck className="h-10 w-10 text-destructive mb-3" />
         <h2 className="text-sm font-bold text-foreground">Akses Ditolak</h2>
         <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-          Anda tidak memiliki izin `dewan_harian_dashboard_view` untuk melihat ringkasan eksekutif Dewan Harian.
+          Anda tidak memiliki izin `dashboard.dewan.view` untuk melihat ringkasan eksekutif Dewan Harian.
           Silakan gunakan simulasi switcher role di Header untuk berganti peran menjadi K.H. Ahmad Dahlan (Ketua Umum).
         </p>
       </div>

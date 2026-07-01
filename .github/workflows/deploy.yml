@@ -22,9 +22,12 @@ jobs:
         run: npm ci
         
       - name: Type check
-        run: npm run type-check || echo "Skipping type-check on failure for now"
+        run: npm run type-check
         
-      - name: Build and Deploy to Cloudflare
+      - name: Build OpenNext
+        run: npx @opennextjs/cloudflare
+
+      - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

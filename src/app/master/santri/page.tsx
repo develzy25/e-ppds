@@ -1,4 +1,4 @@
-import { SantriPageClient } from '@/modules/master/santri/components/SantriPageClient';
+import { SantriPageClient } from '@/modules/master/components/SantriPageClient';
 
 export const metadata = {
   title: 'Master Santri - PPDS ERP',

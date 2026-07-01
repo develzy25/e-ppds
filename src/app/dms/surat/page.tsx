@@ -1,6 +1,5 @@
-import { db } from '@/db';
+import { getSuratsAction } from '@/modules/dms/actions/dms.action';
 import { dmsSurats } from '@/modules/dms/schemas/dms.schema';
-import { desc } from 'drizzle-orm';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,7 +8,8 @@ import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
 export default async function DaftarSuratPage() {
-  const surats = await db.select().from(dmsSurats).orderBy(desc(dmsSurats.createdAt));
+  const response = await getSuratsAction();
+  const surats: (typeof dmsSurats.$inferSelect)[] = response.success && response.data ? response.data : [];
 
   return (
     <div className="p-6 space-y-6">

@@ -1,5 +1,5 @@
 import { db } from '@/db';
-import { masterRoles, userRoles } from '@/db/schema';
+import { masterRoles, masterRole, userRoles } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
 import { userSeeds } from './seed.users';
@@ -16,9 +16,21 @@ export const rolesList = [
 
 export async function seedRoles(pondokId: string) {
   for (const role of rolesList) {
+    // Seed plural table
     const roleExists = await db.select().from(masterRoles).where(eq(masterRoles.id, role.id));
     if (roleExists.length === 0) {
       await db.insert(masterRoles).values({
+        ...role,
+        pondokId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    // Seed singular table
+    const roleSingularExists = await db.select().from(masterRole).where(eq(masterRole.id, role.id));
+    if (roleSingularExists.length === 0) {
+      await db.insert(masterRole).values({
         ...role,
         pondokId,
         createdAt: new Date().toISOString(),

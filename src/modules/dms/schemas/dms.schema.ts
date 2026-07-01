@@ -22,6 +22,7 @@ export const dmsTemplates = sqliteTable('dms_templates', {
   deletedBy: text('deleted_by'),
 });
 
+
 // -----------------------------------------------------------------------------
 // DMS: SURAT (Masuk & Keluar)
 // -----------------------------------------------------------------------------
@@ -46,6 +47,7 @@ export const dmsSurats = sqliteTable('dms_surats', {
   deletedBy: text('deleted_by'),
 });
 
+
 // -----------------------------------------------------------------------------
 // DMS: SURAT APPROVALS (Workflow)
 // -----------------------------------------------------------------------------
@@ -68,6 +70,7 @@ export const dmsSuratApprovals = sqliteTable('dms_surat_approvals', {
   deletedBy: text('deleted_by'),
 });
 
+
 // -----------------------------------------------------------------------------
 // DMS: ATTACHMENTS
 // -----------------------------------------------------------------------------
@@ -87,6 +90,7 @@ export const dmsAttachments = sqliteTable('dms_attachments', {
   deletedBy: text('deleted_by'),
 });
 
+
 // 5. KESEKRETARIATAN & PERSURATAN
 // =============================================================
 
@@ -100,8 +104,8 @@ export const surats = sqliteTable('surats', {
   status: text('status').notNull(), // e.g. "Draft", "Dikirim"
   periodId: text('period_id').notNull().references(() => periodes.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
   deletedAt: text('deleted_at'),
 }, (t) => ({
   unqLetterNumPeriod: unique('unq_letter_num_period').on(t.letterNumber, t.periodId),
@@ -113,7 +117,11 @@ export const disposisi = sqliteTable('disposisi', {
   toSeksiId: text('to_seksi_id').notNull().references(() => masterDepartment.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   note: text('note').notNull(),
   date: text('date').notNull(),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 // =============================================================
 

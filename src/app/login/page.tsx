@@ -3,18 +3,9 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BackgroundScene } from '@/components/ui/background-scene';
-import { Sparkles, Delete, HelpCircle, KeyRound } from 'lucide-react';
+import { Sparkles, Delete } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
-import { mockUsers } from '@/config/mock-data';
-// Mapped PINs for simulation/demo
-const pinUsers = [
-  { pin: '111111', userId: 'u1', name: 'K.H. Ahmad Dahlan', role: 'Ketua Umum' },
-  { pin: '222222', userId: 'u2', name: 'M. Lulu Khulaluddin', role: 'Sekretaris Umum' },
-  { pin: '333333', userId: 'u3', name: 'Ust. Fikri Al-Hafidz', role: 'Kasie Keamanan' },
-  { pin: '444444', userId: 'u4', name: 'H. Zaid Muzakki', role: 'Bendahara Umum' },
-  { pin: '555555', userId: 'u5', name: 'Ust. M. Ali', role: 'Kasie Lab' },
-];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,7 +13,6 @@ export default function LoginPage() {
   const [pin, setPin] = useState('');
   const [isShaking, setIsShaking] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showHelper, setShowHelper] = useState(false);
   
   const cardRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
@@ -245,46 +235,6 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Helper / Demo PIN Drawer */}
-          <div className="border-t border-border/20 pt-4 flex flex-col items-center" style={{ transform: 'translateZ(2px)' }}>
-            <button
-              type="button"
-              onClick={() => setShowHelper(!showHelper)}
-              className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors cursor-pointer"
-            >
-              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
-              <span>Daftar PIN Demo</span>
-            </button>
-
-            {showHelper && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="w-full mt-3 rounded-2xl border border-border/30 bg-secondary/10 p-3 text-[10px] space-y-2 text-muted-foreground font-semibold animate-in fade-in duration-200"
-              >
-                <div className="flex items-center gap-1.5 text-primary text-[10px] font-black mb-1">
-                  <KeyRound className="h-3.5 w-3.5" />
-                  <span>KLIK PIN UNTUK AUTO-FILL</span>
-                </div>
-                <div className="grid grid-cols-1 gap-1.5">
-                  {pinUsers.map((item) => (
-                    <button
-                      key={item.pin}
-                      type="button"
-                      onClick={() => {
-                        setPin(item.pin);
-                        submitPin(item.pin);
-                      }}
-                      className="flex items-center justify-between p-1.5 rounded-lg border border-border/20 bg-card/40 hover:bg-secondary/25 text-left text-[9px] hover:text-primary transition-all cursor-pointer"
-                    >
-                      <span>{item.name} ({item.role})</span>
-                      <code className="font-mono text-primary font-bold text-[10px]">{item.pin}</code>
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </div>
         </div>
       </motion.div>
     </div>

@@ -8,7 +8,7 @@ import { ShieldCheck } from 'lucide-react';
 export default function JamiyyahDashboard() {
   const { currentUser } = useApp();
 
-  const isAuthorized = currentUser.permissions.includes('jamiyyah_dashboard_view');
+  const isAuthorized = currentUser.permissions.includes('pendidikan.jamiyyah.view');
 
   if (!isAuthorized) {
     return (

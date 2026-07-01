@@ -3,7 +3,7 @@ export interface Env {
   API_TOKEN: string;
 }
 
-export default {
+const handler = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
@@ -66,19 +66,17 @@ export default {
         let result;
 
         if (method === 'all') {
-          const { results } = await stmt.all();
-          result = results;
+          result = await stmt.raw();
         } else if (method === 'run') {
           const { meta } = await stmt.run();
           result = meta;
         } else if (method === 'get') {
-          result = await stmt.first();
+          const rows = await stmt.raw();
+          result = rows[0] || null;
         } else if (method === 'values') {
-          const { results } = await stmt.all();
-          result = results.map(Object.values);
+          result = await stmt.raw();
         } else {
-           const { results } = await stmt.all();
-           result = results;
+          result = await stmt.raw();
         }
 
         return respond(200, { success: true, rows: result, requestId: reqId });
@@ -95,7 +93,17 @@ export default {
         const statements = queries.map((q: any) => env.DB.prepare(q.sql).bind(...(q.params || [])));
         const batchResults = await env.DB.batch(statements);
         
-        const results = batchResults.map((r: any) => r.results);
+        const results = batchResults.map((r: any, i: number) => {
+          const q = queries[i];
+          if (q.method === 'all' || q.method === 'values' || q.method === 'get') {
+            const rows = r.results || [];
+            if (q.method === 'get') {
+              return rows[0] ? Object.values(rows[0]) : null;
+            }
+            return rows.map((row: any) => Object.values(row));
+          }
+          return r.meta;
+        });
         return respond(200, { success: true, rows: results, requestId: reqId });
       }
 
@@ -106,4 +114,6 @@ export default {
     }
   },
 };
+
+export default handler;
 

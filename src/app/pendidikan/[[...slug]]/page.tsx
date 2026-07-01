@@ -8,7 +8,7 @@ import { GraduationCap, BookOpen, Scroll, Users, ShieldCheck } from 'lucide-reac
 export default function PendidikanDashboard() {
   const { currentUser } = useApp();
 
-  const isAuthorized = currentUser.permissions.includes('pendidikan_dashboard_view');
+  const isAuthorized = currentUser.permissions.includes('pendidikan.dashboard.view');
 
   if (!isAuthorized) {
     return (

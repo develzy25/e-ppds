@@ -1,4 +1,4 @@
-import { KelasPageClient } from '@/modules/master/kelas/components/KelasPageClient';
+import { KelasPageClient } from '@/modules/master/components/KelasPageClient';
 
 export const metadata = {
   title: 'Master Kelas - PPDS ERP',

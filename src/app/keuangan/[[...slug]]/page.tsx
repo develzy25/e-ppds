@@ -19,9 +19,7 @@ export default function KeuanganDashboard() {
   const [activeInvoices, setActiveInvoices] = useState<Invoice[]>(mockInvoices);
 
   // Filter access: Keuangan / Dewan Harian
-  const isAuthorized = currentUser.primaryRole === 'bendahara_umum' || 
-                       currentUser.permissions.includes('sekr_umum_dashboard_view') || 
-                       currentUser.primaryRole === 'sekretaris_umum'; // M. Lulu has full access
+  const isAuthorized = currentUser.permissions.includes('keuangan.dashboard.view');
 
   // Search active santri invoice
   const currentInvoice = activeInvoices.find(

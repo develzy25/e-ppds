@@ -1,4 +1,4 @@
-import { KamarPageClient } from '@/modules/master/kamar/components/KamarPageClient';
+import { KamarPageClient } from '@/modules/master/components/KamarPageClient';
 
 export const metadata = {
   title: 'Master Kamar - PPDS ERP',

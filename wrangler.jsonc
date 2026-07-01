@@ -12,6 +12,7 @@
   "name": "ppds-erp",
   "compatibility_date": "2024-12-01",
   "compatibility_flags": ["nodejs_compat"],
+  "main": ".open-next/worker.js",
 
   // Assets
   "assets": {
@@ -24,7 +25,8 @@
     {
       "binding": "DB",
       "database_name": "e-ppds-db",
-      "database_id": "1995d927-986b-483f-b6d8-805e3c59508d"
+      "database_id": "1995d927-986b-483f-b6d8-805e3c59508d",
+      "migrations_dir": "drizzle"
     }
   ],
 
@@ -96,7 +98,8 @@
         {
           "binding": "DB",
           "database_name": "e-ppds-db-staging",
-          "database_id": "REPLACE_WITH_STAGING_DB_ID"
+          "database_id": "REPLACE_WITH_STAGING_DB_ID",
+          "migrations_dir": "drizzle"
         }
       ]
     }

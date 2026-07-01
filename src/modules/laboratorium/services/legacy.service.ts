@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { BusinessError, NotFoundError } from '@/infrastructure/errors';
 import { db } from '@/db';
 import {
   
@@ -110,7 +111,7 @@ export async function startBillingSession(
     .where(eq(labBillingRates.id, tarifId))
     .then((res) => res[0]);
 
-  if (!tarif) throw new Error('Tarif tidak ditemukan');
+  if (!tarif) throw new NotFoundError('Tarif tidak ditemukan');
 
   const sessionId = `session-${crypto.randomBytes(8).toString('hex')}`;
 
@@ -146,7 +147,7 @@ export async function pauseBillingSession(sessionId: string): Promise<void> {
     .where(eq(labSessions.id, sessionId))
     .then((res) => res[0]);
 
-  if (!session) throw new Error('Sesi tidak ditemukan');
+  if (!session) throw new NotFoundError('Sesi tidak ditemukan');
 
   const now = new Date().toISOString();
 
@@ -179,7 +180,7 @@ export async function resumeBillingSession(sessionId: string): Promise<void> {
     .where(eq(labSessions.id, sessionId))
     .then((res) => res[0]);
 
-  if (!session) throw new Error('Sesi tidak ditemukan');
+  if (!session) throw new NotFoundError('Sesi tidak ditemukan');
 
   const now = new Date().toISOString();
 
@@ -212,7 +213,7 @@ export async function finishBillingSession(
     .where(eq(labSessions.id, sessionId))
     .then((res) => res[0]);
 
-  if (!session) throw new Error('Sesi tidak ditemukan');
+  if (!session) throw new NotFoundError('Sesi tidak ditemukan');
 
   const now = new Date().toISOString();
 
@@ -316,7 +317,7 @@ export async function createJasaTransaction(
       .where(eq(labServiceRates.id, item.serviceRateId))
       .then((res) => res[0]);
 
-    if (!rate) throw new Error(`Jasa rate id ${item.serviceRateId} tidak ditemukan`);
+    if (!rate) throw new NotFoundError('Jasa rate id ${item.serviceRateId} tidak ditemukan');
 
     const subtotal = rate.harga * item.qty;
     totalAmount += subtotal;
@@ -373,9 +374,9 @@ export async function payTransaction(
     .where(eq(posTransactions.id, transactionId))
     .then((res) => res[0]);
 
-  if (!transaction) throw new Error('Transaksi tidak ditemukan');
-  if (transaction.status === 'Lunas') throw new Error('Transaksi sudah lunas');
-  if (amountPaid < transaction.totalAmount) throw new Error('Jumlah pembayaran kurang');
+  if (!transaction) throw new NotFoundError('Transaksi tidak ditemukan');
+  if (transaction.status === 'Lunas') throw new BusinessError('BUSINESS_ERROR', 'Transaksi sudah lunas');
+  if (amountPaid < transaction.totalAmount) throw new BusinessError('BUSINESS_ERROR', 'Jumlah pembayaran kurang');
 
   const now = new Date().toISOString();
   const change = amountPaid - transaction.totalAmount;
@@ -565,7 +566,7 @@ export async function recordDepositToTreasurer(
   const totalPemasukan = currentCash ? currentCash.kasAkhir : 0;
 
   if (amountToDeposit > totalPemasukan) {
-    throw new Error('Jumlah setoran melebihi saldo kas operasional laboratorium aktif');
+    throw new BusinessError('BUSINESS_ERROR', 'Jumlah setoran melebihi saldo kas operasional laboratorium aktif');
   }
 
   const saldoOperasional = totalPemasukan - amountToDeposit;

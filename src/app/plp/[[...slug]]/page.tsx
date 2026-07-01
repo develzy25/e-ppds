@@ -42,7 +42,7 @@ export default function PLPDashboard() {
   const [inputMeterKamar, setInputMeterKamar] = useState('A-01');
   const [inputMeterValue, setInputMeterValue] = useState<number | ''>('');
   
-  const isAuthorized = currentUser.permissions.includes('plp_dashboard_view');
+  const isAuthorized = currentUser.permissions.includes('plp.dashboard.view');
 
   const recordMeter = () => {
     if (inputMeterValue === '') return;

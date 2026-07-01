@@ -10,7 +10,7 @@ export default function KesehatanDashboard() {
   const { currentUser, addNotification } = useApp();
   const [healthLogs, setHealthLogs] = useState(mockHealthRecords);
 
-  const isAuthorized = currentUser.permissions.includes('kesehatan_dashboard_view');
+  const isAuthorized = currentUser.permissions.includes('kesehatan.dashboard.view');
 
   if (!isAuthorized) {
     return (

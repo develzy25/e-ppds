@@ -2,6 +2,7 @@ import { AuthRepository } from '../repositories/auth.repository';
 import { UserSessionData } from '../types/auth.types';
 import { signJwt } from '../jwt';
 import crypto from 'crypto';
+import { insertAuditLog } from '@/modules/core/services/audit.service';
 
 export class AuthService {
   constructor(private readonly repo: AuthRepository) {}
@@ -38,8 +39,9 @@ export class AuthService {
 
     const token = await signJwt(payload);
 
+    const sessionId = `sess-${crypto.randomBytes(8).toString('hex')}`;
     await this.repo.saveSession({
-      id: `sess-${crypto.randomBytes(8).toString('hex')}`,
+      id: sessionId,
       userId: user.id,
       token,
       userAgent,
@@ -48,13 +50,31 @@ export class AuthService {
       createdAt: new Date().toISOString(),
     });
 
+    await insertAuditLog({
+      module: 'auth',
+      entityName: 'auth_sessions',
+      entityId: sessionId,
+      action: 'LOGIN',
+      performedBy: user.id,
+    });
+
     return token;
   }
 
   async logoutUser(token: string): Promise<void> {
     await this.repo.deleteSession(token);
+    // Note: To properly audit log logout, we should ideally know the userId or sessionId.
+    // For now, logging token deletion as a LOGOUT action.
+    await insertAuditLog({
+      module: 'auth',
+      entityName: 'auth_sessions',
+      entityId: token.substring(0, 16) + '...',
+      action: 'LOGOUT',
+      performedBy: 'SYSTEM',
+    });
   }
 }
+
 
 export const authService = new AuthService(new AuthRepository());
 

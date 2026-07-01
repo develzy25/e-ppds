@@ -1,4 +1,4 @@
-import { TahunAjaranPageClient } from '@/modules/master/tahun-ajaran/components/TahunAjaranPageClient';
+import { TahunAjaranPageClient } from '@/modules/master/components/TahunAjaranPageClient';
 
 export const metadata = {
   title: 'Master Tahun Ajaran - PPDS ERP',

@@ -11,7 +11,14 @@ export const bendaharaKas = sqliteTable('bendahara_kas', {
   saldo: real('saldo').notNull().default(0),
   description: text('description'),
   isActive: integer('is_active', { mode: 'boolean' }).default(true).notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const bendaharaMutasiKas = sqliteTable('bendahara_mutasi_kas', {
   id: text('id').primaryKey(),
@@ -22,8 +29,14 @@ export const bendaharaMutasiKas = sqliteTable('bendahara_mutasi_kas', {
   description: text('description').notNull(),
   referenceId: text('reference_id'), // can link to LPJ or Pengajuan
   saldoAfter: real('saldo_after').notNull(),
-  createdAt: text('created_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 // -------------------------------------------------------------
 // ANGGARAN (RAB & PENGAJUAN)
@@ -35,9 +48,14 @@ export const bendaharaRab = sqliteTable('bendahara_rab', {
   title: text('title').notNull(),
   totalBudget: real('total_budget').notNull(),
   status: text('status').notNull(), // "Draft" | "Submitted" | "Approved" | "Rejected"
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const bendaharaRabItems = sqliteTable('bendahara_rab_items', {
   id: text('id').primaryKey(),
@@ -46,7 +64,14 @@ export const bendaharaRabItems = sqliteTable('bendahara_rab_items', {
   quantity: integer('quantity').notNull(),
   unitPrice: real('unit_price').notNull(),
   subtotal: real('subtotal').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const bendaharaPengajuanDana = sqliteTable('bendahara_pengajuan_dana', {
   id: text('id').primaryKey(),
@@ -58,9 +83,14 @@ export const bendaharaPengajuanDana = sqliteTable('bendahara_pengajuan_dana', {
   amountApproved: real('amount_approved'),
   status: text('status').notNull(), // "Pending" | "Approved" | "Rejected" | "Disbursed"
   requestedBy: text('requested_by').notNull(), // User ID
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const bendaharaApproval = sqliteTable('bendahara_approval', {
   id: text('id').primaryKey(),
@@ -69,8 +99,14 @@ export const bendaharaApproval = sqliteTable('bendahara_approval', {
   approverId: text('approver_id').notNull(), // User ID
   action: text('action').notNull(), // "Approve" | "Reject" | "Revision"
   notes: text('notes'),
-  createdAt: text('created_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 // -------------------------------------------------------------
 // DOKUMEN (LPJ & NOTA)
@@ -83,9 +119,14 @@ export const bendaharaLpj = sqliteTable('bendahara_lpj', {
   amountReturned: real('amount_returned').default(0),
   status: text('status').notNull(), // "Submitted" | "Verified" | "Rejected"
   submittedBy: text('submitted_by').notNull(),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const bendaharaNota = sqliteTable('bendahara_nota', {
   id: text('id').primaryKey(),
@@ -93,7 +134,14 @@ export const bendaharaNota = sqliteTable('bendahara_nota', {
   fileUrl: text('file_url').notNull(),
   description: text('description'),
   amount: real('amount').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 // -------------------------------------------------------------
 // AKUNTANSI (JURNAL, BUKU BESAR, NERACA)
@@ -105,7 +153,14 @@ export const bendaharaAkun = sqliteTable('bendahara_akun', {
   type: text('type').notNull(), // "Asset" | "Liability" | "Equity" | "Revenue" | "Expense"
   normalBalance: text('normal_balance').notNull(), // "Debit" | "Credit"
   isActive: integer('is_active', { mode: 'boolean' }).default(true).notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const bendaharaJurnal = sqliteTable('bendahara_jurnal', {
   id: text('id').primaryKey(),
@@ -113,9 +168,14 @@ export const bendaharaJurnal = sqliteTable('bendahara_jurnal', {
   date: text('date').notNull(),
   description: text('description').notNull(),
   referenceId: text('reference_id'), // Optional link to Mutasi, Penerimaan, LPJ
-  createdAt: text('created_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
   createdBy: text('created_by').notNull(),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const bendaharaJurnalDetail = sqliteTable('bendahara_jurnal_detail', {
   id: text('id').primaryKey(),
@@ -123,7 +183,14 @@ export const bendaharaJurnalDetail = sqliteTable('bendahara_jurnal_detail', {
   akunId: text('akun_id').notNull().references(() => bendaharaAkun.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   debit: real('debit').notNull().default(0),
   credit: real('credit').notNull().default(0),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 
 import { sqliteTable as sqliteTableGenbendahara, text as textGenbendahara } from 'drizzle-orm/sqlite-core';

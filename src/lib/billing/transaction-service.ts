@@ -1,2 +1,2 @@
 // COMPATIBILITY LAYER
-export * from '@/modules/keuangan/billing/transaction-service';
+export * from '@/modules/keuangan/services/transaction-service';

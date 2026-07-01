@@ -1,2 +1,2 @@
 // COMPATIBILITY LAYER
-export * from '@/modules/keuangan/accounting/journal-engine';
+export * from '@/modules/keuangan/services/journal-engine';

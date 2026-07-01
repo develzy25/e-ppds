@@ -8,8 +8,7 @@ import { HardHat, Compass, FileText, ShieldCheck } from 'lucide-react';
 export default function PembangunanDashboard() {
   const { currentUser } = useApp();
 
-  const isAuthorized = currentUser.permissions.includes('pembangunan_dashboard_view') || 
-                       currentUser.primaryRole === 'ketua_umum'; // Ketua Umum has access
+  const isAuthorized = currentUser.permissions.includes('pembangunan.dashboard.view');
 
   if (!isAuthorized) {
     return (

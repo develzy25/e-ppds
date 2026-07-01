@@ -25,7 +25,7 @@ export default function LaboratoriumDashboard() {
   const [posCashAmount, setPosCashAmount] = useState<number | ''>('');
   const [posSuccess, setPosSuccess] = useState(false);
 
-  const isAuthorized = currentUser.permissions.includes('lab_dashboard_view');
+  const isAuthorized = currentUser.permissions.includes('laboratorium.dashboard.view');
 
   // POS Service Tariffs
   const serviceTariffs = {

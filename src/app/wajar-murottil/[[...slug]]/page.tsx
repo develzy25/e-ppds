@@ -39,8 +39,7 @@ export default function WajarMurottilDashboard() {
   const [inputAyat, setInputAyat] = useState('1-15');
   const [inputStatus, setInputStatus] = useState('Lancar (Jayyid)');
 
-  const isAuthorized = currentUser.permissions.includes('wajar_dashboard_view') || 
-                       currentUser.permissions.includes('murottil_dashboard_view');
+  const isAuthorized = currentUser.permissions.includes('pendidikan.wajar.view');
 
   const updateAttendance = (santriId: string, status: 'Hadir' | 'Sakit' | 'Izin' | 'Alfa') => {
     setAttendance(prev => ({

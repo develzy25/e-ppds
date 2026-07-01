@@ -13,3 +13,4 @@ export * from '@/modules/musyawarah/schemas/musyawarah.schema';
 export * from '@/modules/pembangunan/schemas/pembangunan.schema';
 export * from '@/modules/takmir/schemas/takmir.schema';
 export * from '@/modules/bump/schemas/bump.schema';
+export * from '@/modules/keamanan/schemas/keamanan.schema';

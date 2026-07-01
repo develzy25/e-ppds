@@ -1,4 +1,4 @@
-import { PermissionPageClient } from '@/modules/master/permission/components/PermissionPageClient';
+import { PermissionPageClient } from '@/modules/master/components/PermissionPageClient';
 
 export const metadata = {
   title: 'Master Permission - PPDS ERP',

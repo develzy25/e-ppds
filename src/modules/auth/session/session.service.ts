@@ -1,3 +1,4 @@
+import { ForbiddenError } from '@/infrastructure/errors';
 import { cookies, headers } from 'next/headers';
 import { verifyJwt } from '../jwt';
 import { UserSessionData } from '../types/auth.types';
@@ -22,6 +23,6 @@ export const getCurrentUser = cache(async (): Promise<UserSessionData | null> =>
 
 export const requireAuth = cache(async (): Promise<UserSessionData> => {
   const session = await getCurrentUser();
-  if (!session) throw new Error('Unauthorized');
+  if (!session) throw new ForbiddenError('Unauthorized');
   return session;
 });

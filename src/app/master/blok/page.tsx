@@ -1,4 +1,4 @@
-import { BlokPageClient } from '@/modules/master/blok/components/BlokPageClient';
+import { BlokPageClient } from '@/modules/master/components/BlokPageClient';
 
 export const metadata = {
   title: 'Master Blok - PPDS ERP',

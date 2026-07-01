@@ -12,7 +12,7 @@ export default function MusyawarahDashboard() {
   const [activeBudgets, setActiveBudgets] = useState(mockBudgets);
   const [votedId, setVotedId] = useState<string | null>(null);
 
-  const isAuthorized = currentUser.permissions.includes('musyawarah_dashboard_view');
+  const isAuthorized = currentUser.permissions.includes('musyawarah.dashboard.view');
 
   // Find the proposal currently in "Musyawarah" state
   const proposal = activeBudgets.find(b => b.status === 'Musyawarah');

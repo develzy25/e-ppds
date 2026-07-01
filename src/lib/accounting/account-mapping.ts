@@ -1,2 +1,2 @@
 // COMPATIBILITY LAYER
-export * from '@/modules/keuangan/accounting/account-mapping';
+export * from '@/modules/keuangan/services/account-mapping';

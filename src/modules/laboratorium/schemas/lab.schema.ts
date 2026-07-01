@@ -8,16 +8,28 @@ export const labComputers = sqliteTable('lab_computers', {
   name: text('name').unique().notNull(), // e.g. "PC-01"
   status: text('status').notNull(), // "Available" | "In Use" | "Maintenance"
   ipAddress: text('ip_address'),
-  createdAt: text('created_at').notNull(),
-  updatedAt: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const labTariffs = sqliteTable('lab_tariffs', {
   id: text('id').primaryKey(),
   name: text('name').notNull(), // e.g. "Tarif Reguler", "Tarif Anggota"
   pricePerHour: real('price_per_hour').notNull(),
   isActive: integer('is_active', { mode: 'boolean' }).default(true).notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const labSessions = sqliteTable('lab_sessions', {
   id: text('id').primaryKey(),
@@ -28,22 +40,42 @@ export const labSessions = sqliteTable('lab_sessions', {
   endTime: text('end_time'),
   tariffId: text('tariff_id').notNull().references(() => labTariffs.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   totalCost: real('total_cost').default(0), // Calculated at end_time
-  status: text('status').notNull(), // "Running" | "Finished"
+  status: text('status').notNull(), // "Running" | "Finished",
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const labServices = sqliteTable('lab_services', {
   id: text('id').primaryKey(),
   name: text('name').notNull(), // e.g. "Print Hitam Putih", "Scan", "Fotocopy"
   price: real('price').notNull(),
   isActive: integer('is_active', { mode: 'boolean' }).default(true).notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const labInventory = sqliteTable('lab_inventory', {
   id: text('id').primaryKey(),
   name: text('name').notNull(), // e.g. "Kertas A4", "Tinta Printer"
   stock: integer('stock').notNull().default(0),
-  updatedAt: text('updated_at').notNull(),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const labTransactions = sqliteTable('lab_transactions', {
   id: text('id').primaryKey(),
@@ -53,8 +85,14 @@ export const labTransactions = sqliteTable('lab_transactions', {
   status: text('status').notNull(), // "Unpaid" | "Paid" | "Void"
   paymentMethod: text('payment_method'), // "Cash" | "Transfer"
   paidAt: text('paid_at'),
-  createdAt: text('created_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const labTransactionItems = sqliteTable('lab_transaction_items', {
   id: text('id').primaryKey(),
@@ -65,7 +103,14 @@ export const labTransactionItems = sqliteTable('lab_transaction_items', {
   quantity: integer('quantity').notNull(),
   price: real('price').notNull(),
   subtotal: real('subtotal').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const posTransactions = sqliteTable('pos_transactions', {
   id: text('id').primaryKey(), // LAB-YYYY-XXXXX
@@ -76,8 +121,14 @@ export const posTransactions = sqliteTable('pos_transactions', {
   cashierName: text('cashier_name'),
   periodId: text('period_id').notNull().references(() => periodes.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
-  createdAt: text('created_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const posTransactionItems = sqliteTable('pos_transaction_items', {
   id: text('id').primaryKey(),
@@ -85,7 +136,14 @@ export const posTransactionItems = sqliteTable('pos_transaction_items', {
   serviceRateId: text('service_rate_id').references(() => labServices.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   qty: integer('qty').notNull(),
   priceAtSale: real('price_at_sale').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const posPayments = sqliteTable('pos_payments', {
   id: text('id').primaryKey(),
@@ -93,7 +151,14 @@ export const posPayments = sqliteTable('pos_payments', {
   amountPaid: real('amount_paid').notNull(),
   paymentMethod: text('payment_method').notNull(), // "Tunai" | "Transfer" | "QRIS"
   timestamp: text('timestamp').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const cashBooks = sqliteTable('cash_books', {
   id: text('id').primaryKey(),
@@ -105,7 +170,14 @@ export const cashBooks = sqliteTable('cash_books', {
   kasAkhir: real('kas_akhir').notNull(),
   periodId: text('period_id').notNull().references(() => periodes.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const cashMovements = sqliteTable('cash_movements', {
   id: text('id').primaryKey(),
@@ -115,7 +187,14 @@ export const cashMovements = sqliteTable('cash_movements', {
   description: text('description').notNull(),
   periodId: text('period_id').notNull().references(() => periodes.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 export const cashDeposits = sqliteTable('cash_deposits', {
   id: text('id').primaryKey(),
@@ -127,7 +206,14 @@ export const cashDeposits = sqliteTable('cash_deposits', {
   verifiedBy: text('verified_by').references(() => users.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   periodId: text('period_id').notNull().references(() => periodes.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
   pondokId: text('pondok_id').notNull().references(() => pondoks.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+  deletedAt: text('deleted_at'),
+  createdBy: text('created_by'),
+  updatedBy: text('updated_by'),
+  deletedBy: text('deleted_by'),
 });
+
 
 // =============================================================
 // 9. APPROVAL ENGINE TERPUSAT

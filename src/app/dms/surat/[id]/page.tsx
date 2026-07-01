@@ -1,6 +1,4 @@
-import { db } from '@/db';
-import { dmsSurats } from '@/modules/dms/schemas/dms.schema';
-import { eq } from 'drizzle-orm';
+import { getSuratByIdAction } from '@/modules/dms/actions/dms.action';
 import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -8,7 +6,8 @@ import QRCode from 'react-qr-code';
 import { PrintButton } from '@/modules/dms/components/PrintButton';
 
 export default async function DetailSuratPage({ params }: { params: { id: string } }) {
-  const [surat] = await db.select().from(dmsSurats).where(eq(dmsSurats.id, params.id)).limit(1);
+  const response = await getSuratByIdAction(params.id);
+  const surat = response.success ? response.data : null;
 
   if (!surat) {
     notFound();

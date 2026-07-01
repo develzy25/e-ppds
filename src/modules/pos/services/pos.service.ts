@@ -1,3 +1,4 @@
+import { BusinessError, NotFoundError } from '@/infrastructure/errors';
 import { UnitOfWork } from '@/lib/database/unit-of-work';
 import { RepositoryFactory } from '@/lib/database/repository-factory';
 import crypto from 'crypto';
@@ -30,7 +31,7 @@ export class PosService {
         // Here we use productRepo which points to labServices currently
         const rate = await productRepo.findById(item.serviceRateId);
 
-        if (!rate) throw new Error(`Product/Service rate id ${item.serviceRateId} tidak ditemukan`);
+        if (!rate) throw new NotFoundError('Product/Service rate id ${item.serviceRateId} tidak ditemukan');
 
         const price = rate.price || rate.harga || 0;
         const subtotal = price * item.qty;
@@ -90,9 +91,9 @@ export class PosService {
 
       const transaction = await transactionRepo.findById(transactionId);
 
-      if (!transaction) throw new Error('Transaksi tidak ditemukan');
-      if (transaction.status === 'Lunas') throw new Error('Transaksi sudah lunas');
-      if (amountPaid < transaction.totalAmount) throw new Error('Jumlah pembayaran kurang');
+      if (!transaction) throw new NotFoundError('Transaksi tidak ditemukan');
+      if (transaction.status === 'Lunas') throw new BusinessError('BUSINESS_ERROR', 'Transaksi sudah lunas');
+      if (amountPaid < transaction.totalAmount) throw new BusinessError('BUSINESS_ERROR', 'Jumlah pembayaran kurang');
 
       const now = new Date().toISOString();
       const change = amountPaid - transaction.totalAmount;

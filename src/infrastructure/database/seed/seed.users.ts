@@ -7,6 +7,7 @@ export const userSeeds = [
   { id: 'usr-admin', name: 'Super Administrator', email: 'admin@ppds.id', password: 'admin123', pin: '999999', roleId: 'role-super' },
   { id: 'usr-dahlan', name: 'K.H. Ahmad Dahlan', email: 'dahlan@ppds.id', password: 'dahlan123', pin: '111111', roleId: 'role-ketum' },
   { id: 'usr-lulu', name: 'M. Lulu Khulaluddin', email: 'lulu@ppds.id', password: 'lulu123', pin: '222222', roleId: 'role-sekr' },
+  { id: 'usr-sekr-ppds', name: 'Sekretariat PPDS', email: 'sekretariat@ppds.id', password: 'sekretariat123', pin: '123456', roleId: 'role-sekr' },
   { id: 'usr-fikri', name: 'Ust. Fikri Al-Hafidz', email: 'fikri@ppds.id', password: 'fikri123', pin: '333333', roleId: 'role-keam' },
   { id: 'usr-zaid', name: 'H. Zaid Muzakki', email: 'zaid@ppds.id', password: 'zaid123', pin: '444444', roleId: 'role-bend' },
   { id: 'usr-ali', name: 'Ust. M. Ali', email: 'ali@ppds.id', password: 'ali123', pin: '555555', roleId: 'role-huma' },

@@ -1,4 +1,4 @@
-import { DepartmentPageClient } from '@/modules/master/department/components/DepartmentPageClient';
+import { DepartmentPageClient } from '@/modules/master/components/DepartmentPageClient';
 
 export const metadata = {
   title: 'Master Department - PPDS ERP',

@@ -1,5 +1,7 @@
 'use client';
 
+import { BusinessError } from '@/infrastructure/errors';
+
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -66,7 +68,7 @@ export function PrintProvider({ children }: { children: ReactNode }) {
 export function usePrint() {
   const context = useContext(PrintContext);
   if (!context) {
-    throw new Error('usePrint must be used within a PrintProvider');
+    throw new BusinessError('BUSINESS_ERROR', 'usePrint must be used within a PrintProvider');
   }
   return context;
 }
