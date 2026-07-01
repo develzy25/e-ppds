@@ -24,7 +24,7 @@ export function BlokForm({ initialData, onSubmit, isSubmitting }: BlokFormProps)
     defaultValues: {
       id: initialData?.id || '',
       name: initialData?.name || '',
-      pondokId: initialData?.pondokId || 'pondok-1', // Mock pondok
+      pondokId: initialData?.pondokId || '', // Server action override dari session
     }
   });
 

@@ -3,7 +3,16 @@
 import { BusinessError } from '@/infrastructure/errors';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { UserProfile } from '@/config/mock-data';
+export interface UserProfile {
+  id: string;
+  name: string;
+  avatar: string;
+  primaryRole: string;
+  additionalRoles: string[];
+  blokId?: string;
+  permissions: string[];
+  taskAssignments: string[];
+}
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Check, 
@@ -67,6 +76,7 @@ interface AppContextType {
   isLoadingUser: boolean;
   sessionExpired: boolean;
   logout: () => Promise<void>;
+  pondokProfile?: any;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -177,6 +187,7 @@ export function AppProvider({ children, initialSidebarOpen = true }: { children:
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [pondokProfile, setPondokProfile] = useState<any>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [isIdle, setIsIdle] = useState(false);
   const [reauthPin, setReauthPin] = useState('');
@@ -195,33 +206,8 @@ export function AppProvider({ children, initialSidebarOpen = true }: { children:
   const [popup, setPopup] = useState<PopupOptions | null>(null);
   const [confirm, setConfirm] = useState<ConfirmOptions | null>(null);
 
-  // Default mock notifications history
-  const [notifications, setNotifications] = useState<AppNotification[]>([
-    {
-      id: 'n-1',
-      title: 'Pengajuan Dana Baru',
-      message: 'Seksi Keamanan mengajukan dana seragam sebesar Rp 1.200.000.',
-      category: 'anggaran',
-      timestamp: '5 menit yang lalu',
-      isRead: false
-    },
-    {
-      id: 'n-2',
-      title: 'Rekomendasi Izin Santri',
-      message: 'Ahmad Rafli Fauzi meminta izin keluar pondok ke apotek.',
-      category: 'perizinan',
-      timestamp: '20 menit yang lalu',
-      isRead: false
-    },
-    {
-      id: 'n-3',
-      title: 'Mutasi Anggota Baru',
-      message: 'Kasie Media mengajukan permintaan mutasi anggota baru.',
-      category: 'mutasi',
-      timestamp: '1 jam yang lalu',
-      isRead: true
-    }
-  ]);
+  // Notifications — dimuat dari API/realtime, bukan hardcoded
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   // Restore session on mount
   const fetchMe = useCallback(async () => {
@@ -246,6 +232,9 @@ export function AppProvider({ children, initialSidebarOpen = true }: { children:
           taskAssignments: [],
         };
         setCurrentUser(mappedUser);
+        if (data.data?.pondok) {
+          setPondokProfile(data.data.pondok);
+        }
         setSessionExpired(false);
       }
     } catch (err) {

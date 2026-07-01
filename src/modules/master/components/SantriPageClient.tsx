@@ -20,7 +20,7 @@ import { PaginationMeta } from '@/components/master/StandardDataTable';
 import * as xlsx from 'xlsx';
 
 export function SantriPageClient() {
-  const { showToast } = useApp();
+  const { showToast, pondokProfile } = useApp();
   const [santris, setSantris] = useState<SantriEntity[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | undefined>();
   const [page, setPage] = useState(1);
@@ -738,8 +738,8 @@ export function SantriPageClient() {
             <img src={letterhead} alt="Kop Surat" className="max-h-[140px] max-w-full object-contain" />
           ) : (
             <div className="text-center space-y-1">
-              <h1 className="text-xl font-black uppercase tracking-wide">Pondok Pesantren Darussalam Sumedang</h1>
-              <p className="text-xs">Alamat: Sumedang, Jawa Barat, Indonesia | Telp: (0261) 201234 | Kode Pos: 45321</p>
+              <h1 className="text-xl font-black uppercase tracking-wide">{pondokProfile?.name || 'Pondok Pesantren'}</h1>
+              <p className="text-xs mt-1 max-w-lg mx-auto">{pondokProfile?.address || 'Alamat pesantren'}</p>
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Laporan Administrasi Resmi</p>
             </div>
           )}

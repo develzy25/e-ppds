@@ -40,7 +40,7 @@ export function PengurusForm({ initialData, onSubmit, isSubmitting }: PengurusFo
       email: initialData?.email || '',
       password: '',
       statusAktif: initialData?.statusAktif || 'Aktif',
-      pondokId: initialData?.pondokId || 'pondok-1', // Mock pondok
+      pondokId: initialData?.pondokId || '', // Server action override dari session
       roleIds: initialData?.roles?.map(r => r.id) || [],
       positions: initialData?.positions?.map(p => ({ positionId: p.positionId, periodId: p.periodId })) || [],
     }

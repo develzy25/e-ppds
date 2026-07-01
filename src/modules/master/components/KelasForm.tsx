@@ -37,7 +37,7 @@ export function KelasForm({ initialData, onSubmit, isSubmitting }: KelasFormProp
       id: initialData?.id || '',
       name: initialData?.name || '',
       schoolId: initialData?.schoolId || '',
-      pondokId: initialData?.pondokId || 'pondok-1', // Mock pondok
+      pondokId: initialData?.pondokId || '', // Server action override dari session
     }
   });
 

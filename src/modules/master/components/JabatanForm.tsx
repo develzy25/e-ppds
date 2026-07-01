@@ -37,7 +37,7 @@ export function JabatanForm({ initialData, onSubmit, isSubmitting }: JabatanForm
       id: initialData?.id || '',
       name: initialData?.name || '',
       departmentId: initialData?.departmentId || '',
-      pondokId: initialData?.pondokId || 'pondok-1', // Mock pondok
+      pondokId: initialData?.pondokId || '', // Server action override dari session
     }
   });
 

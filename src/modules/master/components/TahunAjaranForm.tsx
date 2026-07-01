@@ -34,7 +34,7 @@ export function TahunAjaranForm({ initialData, onSubmit, isSubmitting }: TahunAj
       id: initialData?.id || '',
       name: initialData?.name || '',
       status: (initialData?.status as 'Aktif' | 'Tidak Aktif') || 'Aktif',
-      pondokId: initialData?.pondokId || 'pondok-1', // Default for now
+      pondokId: initialData?.pondokId || '', // Server action override dari session
     }
   });
 

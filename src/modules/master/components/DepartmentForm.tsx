@@ -32,7 +32,7 @@ export function DepartmentForm({ initialData, onSubmit, isSubmitting }: Departme
       id: initialData?.id || '',
       name: initialData?.name || '',
       type: initialData?.type || 'Divisi',
-      pondokId: initialData?.pondokId || 'pondok-1', // Mock pondok
+      pondokId: initialData?.pondokId || '', // Server action override dari session
     }
   });
 

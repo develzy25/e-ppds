@@ -11,7 +11,7 @@ import { CommandPalette } from './command-palette';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isSidebarOpen, isLoadingUser, currentUser } = useApp();
+  const { isSidebarOpen, isLoadingUser, currentUser, pondokProfile } = useApp();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           
           <div className="space-y-1.5 mt-2">
-            <h1 className="text-base font-black tracking-tight text-foreground">PPDS Darussalam</h1>
+            <h1 className="text-base font-black tracking-tight text-foreground">{pondokProfile?.name ? pondokProfile.name.replace('Pondok Pesantren ', 'PPDS ') : 'PPDS Enterprise'}</h1>
             <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
               Pondok Pesantren Digital System
             </p>

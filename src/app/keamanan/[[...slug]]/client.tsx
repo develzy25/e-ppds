@@ -361,7 +361,7 @@ export default function KeamananDashboardClient({
                   <UserCheck className="h-4.5 w-4.5 text-primary" />
                   Absensi Keberangkatan & Kepulangan Sekolah Formal
                 </h2>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Mock fitur absensi otomatis.</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Fitur absensi keberangkatan & kepulangan sekolah formal.</p>
               </div>
 
               <div className="space-y-4 text-xs mt-4">
@@ -466,8 +466,8 @@ export default function KeamananDashboardClient({
           </div>
         </FormDialog>
 
-        <FormDialog title="Fitur Registrasi Mock" isOpen={modalMotor} onOpenChange={setModalMotor}>
-          <div className="p-4 text-center">Modul registrasi belum terhubung DB. (Fitur Sprint berikutnya).</div>
+        <FormDialog title="Registrasi Kendaraan" isOpen={modalMotor} onOpenChange={setModalMotor}>
+          <div className="p-4 text-center text-sm text-muted-foreground">Modul registrasi kendaraan sedang dalam pengembangan.</div>
         </FormDialog>
 
       </div>

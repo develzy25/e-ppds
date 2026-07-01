@@ -38,7 +38,7 @@ export function KamarForm({ initialData, onSubmit, isSubmitting }: KamarFormProp
       name: initialData?.name || '',
       capacity: initialData?.capacity || 10,
       blockId: initialData?.blockId || '',
-      pondokId: initialData?.pondokId || 'pondok-1', // Mock pondok
+      pondokId: initialData?.pondokId || '', // Server action override dari session
     }
   });
 

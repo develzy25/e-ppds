@@ -32,7 +32,7 @@ export function PeriodeForm({ initialData, onSubmit, isSubmitting }: PeriodeForm
       id: initialData?.id || '',
       name: initialData?.name || '',
       status: initialData?.status || 'Aktif',
-      pondokId: initialData?.pondokId || 'pondok-1', // Mock pondok
+      pondokId: initialData?.pondokId || '', // Server action override dari session
     }
   });
 

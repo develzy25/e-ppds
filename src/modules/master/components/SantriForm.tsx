@@ -54,7 +54,7 @@ export function SantriForm({ initialData, onSubmit, isSubmitting }: SantriFormPr
       classFormalId: initialData?.classFormalId || '',
       classDiniyahId: initialData?.classDiniyahId || '',
       academicYearId: initialData?.academicYearId || '',
-      pondokId: initialData?.pondokId || 'pondok-1', // Mock pondok
+      pondokId: initialData?.pondokId || '', // Server action override dari session
       
       studentStatus: initialData?.studentStatus || '',
       admissionType: initialData?.admissionType || '',

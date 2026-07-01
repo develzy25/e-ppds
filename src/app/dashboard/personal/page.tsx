@@ -49,18 +49,11 @@ export default function DashboardPersonal() {
   const additionalDuties = currentUser.additionalRoles.flatMap(role => getRoleDuties(role));
   const allDuties = [...primaryDuties, ...additionalDuties];
 
-  // Dummy activity logs
-  const activityLogs = [
-    { id: 'f-1', label: 'Perizinan Diperbarui', details: 'Santri Ahmad Rafli (A-01) disetujui izin keluar oleh Ketua Blok.', date: '10 menit yang lalu', type: 'success' as const },
-    { id: 'f-2', label: 'Pelanggaran Baru', details: 'Bahrul Ulum (A-02) dilaporkan membawa HP tanpa registrasi resmi.', date: '30 menit yang lalu', type: 'danger' as const },
-    { id: 'f-3', label: 'Kasir POS Jasa Lab', details: 'Transaksi Print Hitam Putih Rp 5.000 diselesaikan oleh kasir.', date: '1 jam yang lalu', type: 'info' as const }
-  ];
+  // Activity logs — akan dimuat dari API audit log
+  const activityLogs: { id: string; label: string; details: string; date: string; type: 'success' | 'danger' | 'info' }[] = [];
 
-  // Dummy announcements
-  const announcements = [
-    { id: 'a-1', title: 'Persiapan Rapat Dewan Harian Syawal', content: 'Rapat koordinasi pleno Dewan Harian akan diselenggarakan pada Kamis depan pukul 09:00 WIB di Aula Utama.', date: '24 Juni 2026' },
-    { id: 'a-2', title: 'Imbauan Penertiban Barang Elektronik', content: 'Dimohon seluruh Ketua Blok mensosialisasikan kewajiban registrasi HP & Laptop ke Pos Keamanan sebelum tanggal 30 Juni.', date: '23 Juni 2026' }
-  ];
+  // Announcements — akan dimuat dari API pengumuman
+  const announcements: { id: string; title: string; content: string; date: string }[] = [];
 
   return (
     <div className="space-y-6">
@@ -76,7 +69,7 @@ export default function DashboardPersonal() {
           </p>
         </div>
         <div className="text-right text-[11px] font-semibold text-muted-foreground">
-          Hari ini: <span className="text-foreground font-bold">Rabu, 24 Juni 2026</span>
+          Hari ini: <span className="text-foreground font-bold">{new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
         </div>
       </div>
 

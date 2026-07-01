@@ -25,7 +25,7 @@ export function PermissionForm({ initialData, onSubmit, isSubmitting }: Permissi
       id: initialData?.id || '',
       name: initialData?.name || '',
       description: initialData?.description || '',
-      pondokId: initialData?.pondokId || 'pondok-1', // Mock pondok
+      pondokId: initialData?.pondokId || '', // Server action override dari session
     }
   });
 

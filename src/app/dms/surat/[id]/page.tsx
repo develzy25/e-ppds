@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import QRCode from 'react-qr-code';
 import { PrintButton } from '@/modules/dms/components/PrintButton';
+import { getPondokProfileAction } from '@/modules/keamanan/actions/keamanan.action';
 
 export default async function DetailSuratPage({ params }: { params: { id: string } }) {
   const response = await getSuratByIdAction(params.id);
   const surat = response.success ? response.data : null;
+  const pondokProfile = await getPondokProfileAction();
 
   if (!surat) {
     notFound();
@@ -32,8 +34,8 @@ export default async function DetailSuratPage({ params }: { params: { id: string
       <div className="bg-white text-black p-10 min-h-[1000px] border shadow-sm print:shadow-none print:border-none print:p-0">
         {/* Kop Surat Header (Mockup) */}
         <div className="text-center border-b-4 border-double border-black pb-4 mb-8">
-          <h1 className="text-2xl font-bold uppercase tracking-widest">Pondok Pesantren Darussalam Sumedang</h1>
-          <p className="text-sm">Jl. Pesantren No.1, Sindang, Sumedang - Jawa Barat</p>
+          <h1 className="text-2xl font-bold uppercase tracking-widest">{pondokProfile?.name || 'Pondok Pesantren'}</h1>
+          <p className="text-sm">{pondokProfile?.address || 'Alamat Pesantren'}</p>
         </div>
 
         <div className="flex justify-between mb-8">

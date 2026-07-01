@@ -32,7 +32,7 @@ export function SekolahForm({ initialData, onSubmit, isSubmitting }: SekolahForm
       id: initialData?.id || '',
       name: initialData?.name || '',
       type: initialData?.type || 'Formal',
-      pondokId: initialData?.pondokId || 'pondok-1', // Mock pondok
+      pondokId: initialData?.pondokId || '', // Server action override dari session
     }
   });
 

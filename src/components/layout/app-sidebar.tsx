@@ -18,7 +18,7 @@ function DynamicIcon({ name, className }: { name: string; className?: string }) 
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { currentUser, isSidebarOpen, setSidebarOpen } = useApp();
+  const { currentUser, isSidebarOpen, setSidebarOpen, pondokProfile } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   
   // Persist expanded menus in localStorage
@@ -119,7 +119,7 @@ export function AppSidebar() {
           <div className="flex flex-col leading-none overflow-hidden">
             <span className="text-xs font-black text-foreground tracking-tight">SIM-PPDS</span>
             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
-              Darussalam
+              {pondokProfile?.name ? pondokProfile.name.replace('Pondok Pesantren ', '') : 'Pesantren'}
             </span>
           </div>
         )}
