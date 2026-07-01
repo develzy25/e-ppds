@@ -6,6 +6,21 @@ import { db } from '@/db';
 import { UnitOfWork } from '@/infrastructure/database/unit-of-work';
 import { KeamananService } from '../services/keamanan.service';
 import { revalidatePath } from 'next/cache';
+import { pondoks } from '@/modules/core/schemas/core.schema';
+import { eq } from 'drizzle-orm';
+
+export async function getPondokProfileAction() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error('Unauthorized');
+  
+  const result = await db
+    .select()
+    .from(pondoks)
+    .where(eq(pondoks.id, user.pondokId))
+    .limit(1);
+    
+  return result[0] || null;
+}
 
 export async function getPermitsAction() {
   const user = await getCurrentUser();

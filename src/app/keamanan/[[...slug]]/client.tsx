@@ -37,11 +37,13 @@ const slugToTab = (slugStr?: string): 'izin' | 'skkb' | 'pelanggaran' | 'formal'
 export default function KeamananDashboardClient({
   initialPermits,
   initialOffenses,
-  santriList
+  santriList,
+  pondokProfile
 }: {
   initialPermits: any[],
   initialOffenses: any[],
-  santriList: any[]
+  santriList: any[],
+  pondokProfile?: any
 }) {
   const { currentUser, addNotification, showToast } = useApp();
   const router = useRouter();
@@ -487,22 +489,24 @@ export default function KeamananDashboardClient({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/logo-sidebar.png" alt="Logo" className="w-24 h-24 object-contain" />
                   <div className="text-center flex-1 space-y-1">
-                    <h1 className="text-2xl font-black uppercase tracking-widest">Pondok Pesantren Darussalam</h1>
+                    <h1 className="text-2xl font-black uppercase tracking-widest">{pondokProfile?.name || 'NAMA PONDOK'}</h1>
                     <p className="text-sm font-semibold uppercase">Seksi Keamanan & Ketertiban Santri</p>
-                    <p className="text-xs">Jl. Pesantren No. 1, Desa Darussalam, Kecamatan Sumedang, Jawa Barat</p>
+                    <p className="text-xs">{pondokProfile?.address || 'Alamat pondok'}</p>
                   </div>
                 </div>
 
                 {/* Judul Surat */}
                 <div className="text-center space-y-1 mb-10">
                   <h2 className="text-xl font-bold uppercase underline">Surat Keterangan Kelakuan Baik</h2>
-                  <p className="text-sm">Nomor: 045/SKKB/KEAM/VI/2026</p>
+                  <p className="text-sm">
+                    Nomor: {`${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}/SKKB/KEAM/${['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][new Date().getMonth()]}/${new Date().getFullYear()}`}
+                  </p>
                 </div>
 
                 {/* Isi Surat */}
                 <div className="text-justify text-sm leading-relaxed space-y-4">
                   <p>
-                    Yang bertanda tangan di bawah ini, Kepala Seksi Keamanan Pondok Pesantren Darussalam Sumedang, menerangkan dengan sesungguhnya bahwa santri di bawah ini:
+                    Yang bertanda tangan di bawah ini, Kepala Seksi Keamanan {pondokProfile?.name || 'Pondok Pesantren'}, menerangkan dengan sesungguhnya bahwa santri di bawah ini:
                   </p>
 
                   <div className="px-8 space-y-2 font-semibold">
@@ -515,7 +519,7 @@ export default function KeamananDashboardClient({
                   </div>
 
                   <p className="mt-6">
-                    Adalah benar santri aktif Pondok Pesantren Darussalam. Berdasarkan catatan dan evaluasi buku besar pelanggaran Seksi Keamanan, santri tersebut <strong>memiliki Total Poin Pelanggaran: {totalPoints} Poin</strong>.
+                    Adalah benar santri aktif {pondokProfile?.name || 'Pondok Pesantren'}. Berdasarkan catatan dan evaluasi buku besar pelanggaran Seksi Keamanan, santri tersebut <strong>memiliki Total Poin Pelanggaran: {totalPoints} Poin</strong>.
                   </p>
                   <p>
                     Karena poin pelanggaran yang bersangkutan berada di bawah batas maksimal sanksi berat (40 Poin), maka yang bersangkutan dinyatakan <strong>BERKELAKUAN BAIK</strong> dan tidak sedang dalam masa skorsing atau sanksi administrasi pondok pesantren.
@@ -528,8 +532,8 @@ export default function KeamananDashboardClient({
                 {/* Tanda Tangan */}
                 <div className="flex justify-end mt-16 text-sm">
                   <div className="text-center space-y-16">
-                    <p>Sumedang, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br/>Kepala Seksi Keamanan,</p>
-                    <div className="font-bold underline uppercase">Ust. Fikri Al-Hafidz</div>
+                    <p>{pondokProfile?.address?.split(',').pop()?.trim() || 'Pondok'}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br/>Kepala Seksi Keamanan,</p>
+                    <div className="font-bold underline uppercase">{currentUser?.name || 'Pengurus Keamanan'}</div>
                   </div>
                 </div>
               </div>

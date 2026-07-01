@@ -1,6 +1,6 @@
 import React from 'react';
 import KeamananDashboardClient from './client';
-import { getPermitsAction, getOffensesAction } from '@/modules/keamanan/actions/keamanan.action';
+import { getPermitsAction, getOffensesAction, getPondokProfileAction } from '@/modules/keamanan/actions/keamanan.action';
 import { getSantris } from '@/modules/master/actions/santri.action';
 import { getCurrentUser } from '@/lib/services/auth';
 import { redirect } from 'next/navigation';
@@ -14,6 +14,7 @@ export default async function KeamananDashboardPage() {
   // Fetch real data from Server Actions
   const permits = await getPermitsAction();
   const offenses = await getOffensesAction();
+  const pondokProfile = await getPondokProfileAction();
   
   // We need a list of santris for the dropdowns. 
   // Wait, getSantris requires page and limit. We can just fetch a large limit or we use a new action.
@@ -26,6 +27,7 @@ export default async function KeamananDashboardPage() {
       initialPermits={permits}
       initialOffenses={offenses}
       santriList={santriList || []}
+      pondokProfile={pondokProfile}
     />
   );
 }
