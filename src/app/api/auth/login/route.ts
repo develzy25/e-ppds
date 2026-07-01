@@ -4,37 +4,10 @@ import { cookies } from 'next/headers';
 import { ok, badRequest, unauthorized, internalError } from '@/shared/utils/api-response';
 import { getRequestMeta } from '@/shared/utils/request-meta';
 
-// Simple in-memory IP rate limiter for brute-force protection
-const rateLimit = new Map<string, { count: number, resetTime: number }>();
-
-function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
-  const now = Date.now();
-  const record = rateLimit.get(ip);
-  
-  if (record && record.resetTime > now) {
-    if (record.count >= 5) {
-      return { allowed: false, remaining: Math.ceil((record.resetTime - now) / 60000) };
-    }
-    record.count++;
-    return { allowed: true, remaining: 5 - record.count };
-  } else {
-    rateLimit.set(ip, { count: 1, resetTime: now + 15 * 60 * 1000 }); // 15 mins block
-    return { allowed: true, remaining: 4 };
-  }
-}
-
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
   const meta = await getRequestMeta();
-  const rate = checkRateLimit(ip);
 
-  if (!rate.allowed) {
-    return unauthorized(
-      'AUTH-429',
-      `Terlalu banyak percobaan login gagal dari IP Anda. Coba lagi dalam ${rate.remaining} menit.`,
-      meta
-    );
-  }
 
   try {
     const body = await req.json();

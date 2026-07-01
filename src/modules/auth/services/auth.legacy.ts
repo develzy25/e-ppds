@@ -289,16 +289,6 @@ export async function loginUserByPin(
 
   const user = foundUsers[0];
 
-  // Cek jika akun sedang terkunci karena brute-force
-  if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
-    const waitTime = Math.ceil((new Date(user.lockedUntil).getTime() - Date.now()) / 60000);
-    return {
-      success: false,
-      error: `Akun terkunci sementara karena terlalu banyak percobaan salah. Coba lagi dalam ${waitTime} menit.`,
-      code: 'AUTH-423',
-    };
-  }
-
   // Cari periode aktif untuk pondok ini
   const activePeriods = await db
     .select()
