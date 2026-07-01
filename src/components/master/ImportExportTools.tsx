@@ -1,6 +1,7 @@
 import React from 'react';
 import { Download, Upload, Printer, FileSpreadsheet } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/shared/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,12 +28,9 @@ export function ImportExportTools({ onImport, onExportExcel, onExportCsv, onPrin
       
       {(onExportExcel || onExportCsv) && (
         <DropdownMenu>
-          {/* @ts-expect-error React 19 type mismatch with Radix UI asChild */}
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9 gap-1.5">
-              <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Export</span>
-            </Button>
+          <DropdownMenuTrigger className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-9 gap-1.5")}>
+            <Download className="h-4 w-4" />
+            <span className="hidden sm:inline">Export</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {onExportExcel && (

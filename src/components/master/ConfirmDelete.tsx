@@ -26,10 +26,11 @@ export function ConfirmDelete({
 }: ConfirmDeleteProps) {
   return (
     <AlertDialog>
-      {/* @ts-expect-error React 19 type mismatch with Radix UI asChild */}
-      <AlertDialogTrigger asChild>
-        {children}
-      </AlertDialogTrigger>
+      {React.isValidElement(children) ? (
+        <AlertDialogTrigger render={children} />
+      ) : (
+        <AlertDialogTrigger>{children}</AlertDialogTrigger>
+      )}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
