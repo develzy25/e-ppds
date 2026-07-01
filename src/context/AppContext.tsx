@@ -3,7 +3,7 @@
 import { BusinessError } from '@/infrastructure/errors';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { UserProfile, mockUsers } from '@/config/mock-data';
+import { UserProfile } from '@/config/mock-data';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Check, 
@@ -53,7 +53,6 @@ export interface ConfirmOptions {
 
 interface AppContextType {
   currentUser: UserProfile;
-  changeUser: (userId: string) => void;
   notifications: AppNotification[];
   addNotification: (title: string, message: string, category: AppNotification['category']) => void;
   markAsRead: (id: string) => void;
@@ -176,7 +175,7 @@ const generateUniqueId = (prefix: string) => {
 
 export function AppProvider({ children, initialSidebarOpen = true }: { children: React.ReactNode, initialSidebarOpen?: boolean }) {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<UserProfile>(mockUsers[1]);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [isIdle, setIsIdle] = useState(false);
@@ -230,22 +229,21 @@ export function AppProvider({ children, initialSidebarOpen = true }: { children:
       const res = await fetch('/api/auth/me');
       if (res.status === 401) {
         setIsLoadingUser(false);
-        // Do not force show dialog on initial load if no cookie exists
+        router.push('/login');
         return;
       }
       const data = await res.json();
       if (data.success && data.data?.user) {
         const dbUser = data.data.user;
-        const matchedMock = mockUsers.find(u => u.id === dbUser.userId || u.name.toLowerCase() === dbUser.name.toLowerCase());
         const mappedUser: UserProfile = {
           id: dbUser.userId,
           name: dbUser.name,
-          avatar: matchedMock?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-          primaryRole: matchedMock?.primaryRole || dbUser.roles[0] || 'pengurus',
-          additionalRoles: matchedMock?.additionalRoles || dbUser.roles.slice(1) || [],
-          blokId: matchedMock?.blokId,
-          permissions: matchedMock?.permissions || dbUser.permissions || [],
-          taskAssignments: matchedMock?.taskAssignments || [],
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+          primaryRole: dbUser.roles[0] || 'pengurus',
+          additionalRoles: dbUser.roles.slice(1) || [],
+          blokId: undefined, // Ambil dari db jika ada
+          permissions: dbUser.permissions || [],
+          taskAssignments: [],
         };
         setCurrentUser(mappedUser);
         setSessionExpired(false);
@@ -386,18 +384,7 @@ export function AppProvider({ children, initialSidebarOpen = true }: { children:
     });
   }, [showToast]);
 
-  const changeUser = useCallback((userId: string) => {
-    const foundUser = mockUsers.find(u => u.id === userId);
-    if (foundUser) {
-      setCurrentUser(foundUser);
-      // Trigger notification for demo feedback
-      addNotification(
-        'Peran Berubah',
-        `Sekarang bertindak sebagai ${foundUser.name}`,
-        'umum'
-      );
-    }
-  }, [addNotification]);
+
 
   const markAsRead = useCallback((id: string) => {
     setNotifications(prev =>
@@ -451,8 +438,7 @@ export function AppProvider({ children, initialSidebarOpen = true }: { children:
   }, [showToast]);
 
   const contextValue = useMemo(() => ({
-    currentUser,
-    changeUser,
+    currentUser: currentUser as UserProfile, // Typecast since AppShell guards null rendering
     notifications,
     addNotification,
     markAsRead,
@@ -469,7 +455,6 @@ export function AppProvider({ children, initialSidebarOpen = true }: { children:
     logout
   }), [
     currentUser,
-    changeUser,
     notifications,
     addNotification,
     markAsRead,

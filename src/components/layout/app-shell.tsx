@@ -11,7 +11,7 @@ import { CommandPalette } from './command-palette';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isSidebarOpen, isLoadingUser } = useApp();
+  const { isSidebarOpen, isLoadingUser, currentUser } = useApp();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  if (isLoading || isLoadingUser) {
+  if (isLoading || isLoadingUser || !currentUser) {
     return (
       <div className="relative flex h-screen w-screen flex-col items-center justify-center bg-background overflow-hidden text-foreground">
         {/* Ambient Gradient Background */}
