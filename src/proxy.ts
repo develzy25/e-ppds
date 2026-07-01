@@ -23,9 +23,11 @@ export function proxy(request: NextRequest) {
   const isPublicApi = publicApiPrefixes.some(prefix => pathname.startsWith(prefix));
 
   if (!token && !isPublicRoute && !isPublicApi) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ success: false, code: 'AUTH-401', message: 'Unauthorized' }, { status: 401 });
+    }
     // Redirect ke login jika mencoba mengakses halaman terproteksi tanpa session_token
     const loginUrl = new URL('/login', request.url);
-    // Kita bisa menyematkan parameter redirect URL nanti jika diperlukan
     return NextResponse.redirect(loginUrl);
   }
 
