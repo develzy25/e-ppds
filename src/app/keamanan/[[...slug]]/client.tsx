@@ -499,7 +499,7 @@ export default function KeamananDashboardClient({
                 <div className="text-center space-y-1 mb-10">
                   <h2 className="text-xl font-bold uppercase underline">Surat Keterangan Kelakuan Baik</h2>
                   <p className="text-sm">
-                    Nomor: {`${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}/SKKB/KEAM/${['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][new Date().getMonth()]}/${new Date().getFullYear()}`}
+                    Nomor: {`${(s.nis || '000').slice(-3).padStart(3, '0')}/SKKB/KEAM/${['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][new Date().getMonth()]}/${new Date().getFullYear()}`}
                   </p>
                 </div>
 
